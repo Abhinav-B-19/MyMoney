@@ -3,7 +3,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/context/DateContext.js"  ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

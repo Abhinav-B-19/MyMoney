@@ -1,28 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { View, StyleSheet, Text, FlatList, Modal } from "react-native";
-import MonthPicker from "./MonthPicker";
-import { addMonths } from 'date-fns'
-import { Divider, IconButton, Button } from "react-native-paper";
+// import MonthPicker from "./MonthPicker";
+import { IconButton, Button } from "react-native-paper";
 import FilterPopoverMenu from "./FilterPopoverMenu";
 import { ViewModeOptions, ShowTotalOptions } from "@/constants/filterOptions";
+import ViewModeContext from "@/context/ViewModeContext";
+import Picker from "./Picker";
 
 interface SecondNavbarProps {
   topSectionText: string;
   bottomSectionText: string;
   onDateChange: (newDate: Date) => void;
-  onSelectFilter: (filter: string) => void;
-  onSelectTotalDisplay: (option: boolean) => void;
 }
 
 const SecondNavbar: React.FC<SecondNavbarProps> = ({
   topSectionText,
   bottomSectionText,
   onDateChange,
-  onSelectFilter,
-  onSelectTotalDisplay
 }) => {
-  const [selectedViewMode, setSelectedViewMode] = useState(Object.values(ViewModeOptions)[0]);
-  const [selectedTotalOption, setSelectedTotalOption] = useState(Object.values(ShowTotalOptions)[0]);
+  const { viewMode, setViewMode } = useContext(ViewModeContext);
+
+  const [selectedViewMode, setSelectedViewMode] = useState(
+    Object.values(ViewModeOptions)[0]
+  );
+  const [selectedTotalOption, setSelectedTotalOption] = useState(
+    Object.values(ShowTotalOptions)[0]
+  );
   const [showModal, setShowModal] = useState(false);
   const [date, setDate] = useState(new Date()); // Initialize date state with current date
 
@@ -36,8 +39,8 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
   };
 
   useEffect(() => {
-    console.log(selectedViewMode, selectedTotalOption)
-  })
+    console.log(selectedViewMode, selectedTotalOption, date);
+  });
 
   const handleFilterChange = () => {
     setShowModal(true);
@@ -49,48 +52,60 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
 
   const handleSelectFilter = (filter: string) => {
     setSelectedViewMode(filter);
-    onSelectFilter(filter);
+    setViewMode(filter);
     closeModal();
   };
 
   const handleSelectTotalDisplay = (option: boolean) => {
     setSelectedTotalOption(option);
-    onSelectTotalDisplay(option);
     closeModal();
   };
 
   return (
     <View style={styles.container}>
-      <View style={[styles.section, styles.redSection]}>
+      <View style={[styles.section, styles.topSection]}>
         <FlatList
-          ListHeaderComponent={<MonthPicker date={date} onDateChange={handleDateChange} />}
+          ListHeaderComponent={
+            // <MonthPicker date={date} onDateChange={handleDateChange} />
+            <Picker
+              date={date}
+              onDateChange={handleDateChange}
+              mode={viewMode}
+            />
+          }
+          data={[]}
+          renderItem={() => <View />}
         />
-        <IconButton icon={"filter"} style={styles.filterIcon} onPress={handleFilterChange}/>
+        <IconButton
+          icon={"filter"}
+          style={styles.filterIcon}
+          onPress={handleFilterChange}
+        />
       </View>
-      <View style={styles.blueSection}>
-  <View style={[styles.bottomSectionItem, styles.halfSection]}>
-    <Text>Expense</Text>
-    <Text>{expense}</Text>
-  </View>
-  <View style={[styles.bottomSectionItem, styles.halfSection]}>
-    <Text>Income</Text>
-    <Text>{income}</Text>
-  </View>
-  {selectedTotalOption && ( // Wrap the conditional rendering with {}
-    <View style={[styles.bottomSectionItem, styles.halfSection]}>
-      <Text>Total</Text>
-      <Text>{total}</Text>
-    </View>
-  )}
-</View>
+      <View style={styles.bottomSection}>
+        <View style={[styles.bottomSectionItem, styles.halfSection]}>
+          <Text>Expense</Text>
+          <Text>{expense}</Text>
+        </View>
+        <View style={[styles.bottomSectionItem, styles.halfSection]}>
+          <Text>Income</Text>
+          <Text>{income}</Text>
+        </View>
+        {selectedTotalOption && ( // Wrap the conditional rendering with {}
+          <View style={[styles.bottomSectionItem, styles.halfSection]}>
+            <Text>Total</Text>
+            <Text>{total}</Text>
+          </View>
+        )}
+      </View>
       <Modal visible={showModal} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <FilterPopoverMenu 
-              onSelectFilter={handleSelectFilter} 
-              onSelectTotalDisplay={handleSelectTotalDisplay} 
-              selectedViewMode={selectedViewMode} 
-              selectedTotalOption={selectedTotalOption} 
+            <FilterPopoverMenu
+              onSelectFilter={handleSelectFilter}
+              onSelectTotalDisplay={handleSelectTotalDisplay} // Pass onSelectTotalDisplay directly
+              selectedViewMode={selectedViewMode}
+              selectedTotalOption={selectedTotalOption}
             />
             <Button onPress={closeModal}>Close</Button>
           </View>
@@ -113,14 +128,19 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 20,
   },
-  redSection: {
-    backgroundColor: "pink",
+  topSection: {
+    // backgroundColor: "pink",
+    borderBottomWidth: 1.5,
+    borderBottomColor: "#ccc",
+    borderBottomRightRadius: 40,
+    borderBottomLeftRadius: 40,
   },
-  blueSection: {
+  bottomSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
+    paddingVertical: 5,
   },
   bottomSectionItem: {
     alignItems: "center",
@@ -128,7 +148,7 @@ const styles = StyleSheet.create({
   },
   halfSection: {
     backgroundColor: "white",
-    height: 50,
+    height: 40,
   },
   filterIcon: {
     marginHorizontal: 0,

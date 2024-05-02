@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useContext } from "react";
+import { View, StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -27,24 +27,15 @@ type BottomTabScreenProps<T extends keyof RootTabParamList> = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
-  //   const [selectedDate, setSelectedDate] = useState(new Date());
-
-  //   const handleDateChange = (newDate: Date) => {
-  //     setSelectedDate(newDate);
-  //   };
-
   const { selectedDate, handleDateChange } = useContext(DateContext);
 
   return (
     <View style={styles.container}>
       <Navbar title="Money Tracker" />
-      {/* <DateContext.Provider value={{ selectedDate, handleDateChange }}> */}
       <SecondNavbar
         topSectionText="Top Section"
         bottomSectionText="Bottom Section"
-        //   onDateChange={handleDateChange}
-        // selectedDate={selectedDate} // Pass selectedDate as prop
-        onDateChange={handleDateChange} // Pass handleDateChange as prop
+        onDateChange={handleDateChange}
       />
       <Tab.Navigator>
         <Tab.Screen

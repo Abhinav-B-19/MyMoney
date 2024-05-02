@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { ViewModeOptions, ShowTotalOptions } from "@/constants/filterOptions";
 
@@ -27,7 +27,13 @@ const FilterPopoverMenu: React.FC<FilterPopoverMenuProps> = ({
                 key={option}
                 onPress={() => onSelectFilter(ViewModeOptions[option])}
               >
-                <Text style={[styles.option, selectedViewMode === ViewModeOptions[option] && styles.selectedOption]}>
+                <Text
+                  style={[
+                    styles.option,
+                    selectedViewMode === ViewModeOptions[option] &&
+                      styles.selectedOption,
+                  ]}
+                >
                   {option}
                 </Text>
               </TouchableOpacity>
@@ -42,7 +48,13 @@ const FilterPopoverMenu: React.FC<FilterPopoverMenuProps> = ({
                 key={option}
                 onPress={() => onSelectTotalDisplay(ShowTotalOptions[option])}
               >
-                <Text style={[styles.option, selectedTotalOption === ShowTotalOptions[option] && styles.selectedOption]}>
+                <Text
+                  style={[
+                    styles.option,
+                    selectedTotalOption === ShowTotalOptions[option] &&
+                      styles.selectedOption,
+                  ]}
+                >
                   {option}
                 </Text>
               </TouchableOpacity>
@@ -90,7 +102,7 @@ const styles = StyleSheet.create({
     color: "#007bff",
   },
   selectedOption: {
-    fontWeight: 'bold', // You can customize the style for selected options
+    fontWeight: "bold",
   },
 });
 

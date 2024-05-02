@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
 import { View, StyleSheet, Text } from "react-native";
-import Navbar from "@/components/Navbar";
-import SecondNavbar from "@/components/SecondNavbar";
 import {
   addDays,
   addMonths,
@@ -16,14 +14,11 @@ import { ViewModeOptions } from "@/constants/filterOptions";
 import { format } from "date-fns";
 import TrackerView from "@/components/TaskView";
 import DateContext from "../context/DateContext";
+import ViewModeContext from "@/context/ViewModeContext";
 
 const MoneyTrackerPage: React.FC = () => {
   const { selectedDate, handleDateChange } = useContext(DateContext);
-  // const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // const handleDateChange = (newDate: Date) => {
-  //   setSelectedDate(newDate);
-  // };
   const [expenses, setExpenses] = useState<number>(0);
   const [income, setIncome] = useState<number>(0);
   const [balance, setBalance] = useState<number>(0);
@@ -31,141 +26,179 @@ const MoneyTrackerPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<
     (typeof ViewModeOptions)[keyof typeof ViewModeOptions]
   >(ViewModeOptions.MONTHLY);
-  const [showTotal, setShowTotal] = useState<boolean>(true); // Set the default value to true
 
+  const viewModeContext = useContext(ViewModeContext);
   const [collection, setCollection] = useState([
     {
       id: "0",
       title: "test",
+      description: "Sample transaction description",
       date: new Date(),
-      numberOfWords: 4,
       transactionAmount: 100,
       transactionType: "credit",
+      currency: "USD",
+      account: "Credit Card",
+      category: "room",
+      isSplitTransaction: false,
     },
     {
       id: "1",
       title: "test 1",
+      description: "Another sample transaction description",
       date: new Date(),
-      numberOfWords: 8,
       transactionAmount: 50,
       transactionType: "debit",
+      currency: "USD",
+      account: "Savings",
+      category: "food",
+      isSplitTransaction: false,
     },
     {
       id: "2",
-      title: "test 3",
+      title: "test 2",
+      description: "Yet another sample transaction description",
       date: addMonths(new Date(), 1),
-      numberOfWords: 4,
       transactionAmount: 100,
       transactionType: "credit",
+      currency: "USD",
+      account: "Cash",
+      category: "transport",
+      isSplitTransaction: false,
     },
     {
       id: "3",
       title: "test 3",
-      date: addMonths(new Date(), 1),
-      numberOfWords: 5,
-      transactionAmount: 100,
-      transactionType: "credit",
+      description: "Description of test 3",
+      date: addDays(new Date(), 5),
+      transactionAmount: 200,
+      transactionType: "debit",
+      currency: "EUR",
+      account: "Checking",
+      category: "utilities",
+      isSplitTransaction: true,
     },
     {
       id: "4",
       title: "test 4",
-      date: addMonths(new Date(), 2),
-      numberOfWords: 6,
-      transactionAmount: 100,
+      description: "Description of test 4",
+      date: new Date(),
+      transactionAmount: 150,
       transactionType: "credit",
+      currency: "GBP",
+      account: "Credit Card",
+      category: "entertainment",
+      isSplitTransaction: false,
     },
     {
       id: "5",
       title: "test 5",
-      date: addMonths(new Date(), 3),
-      numberOfWords: 7,
-      transactionAmount: 100,
+      description: "Description of test 5",
+      date: addMonths(new Date(), 2),
+      transactionAmount: 300,
       transactionType: "credit",
+      currency: "USD",
+      account: "Savings",
+      category: "travel",
+      isSplitTransaction: false,
     },
     {
       id: "6",
       title: "test 6",
-      date: addMonths(new Date(), 4),
-      numberOfWords: 8,
-      transactionAmount: 100,
-      transactionType: "credit",
+      description: "Description of test 6",
+      date: addMonths(new Date(), 3),
+      transactionAmount: 250,
+      transactionType: "debit",
+      currency: "USD",
+      account: "Checking",
+      category: "clothing",
+      isSplitTransaction: false,
     },
     {
       id: "7",
       title: "test 7",
-      date: addMonths(new Date(), 5),
-      numberOfWords: 9,
-      transactionAmount: 100,
+      description: "Description of test 7",
+      date: addMonths(new Date(), 4),
+      transactionAmount: 180,
       transactionType: "credit",
+      currency: "EUR",
+      account: "Credit Card",
+      category: "health",
+      isSplitTransaction: false,
     },
     {
       id: "8",
       title: "test 8",
-      date: addMonths(new Date(), 6),
-      numberOfWords: 10,
-      transactionAmount: 100,
-      transactionType: "credit",
+      description: "Description of test 8",
+      date: addMonths(new Date(), 5),
+      transactionAmount: 120,
+      transactionType: "debit",
+      currency: "GBP",
+      account: "Savings",
+      category: "education",
+      isSplitTransaction: true,
     },
     {
       id: "9",
       title: "test 9",
-      date: addMonths(new Date(), 7),
-      numberOfWords: 11,
-      transactionAmount: 100,
+      description: "Description of test 9",
+      date: addMonths(new Date(), 6),
+      transactionAmount: 350,
       transactionType: "credit",
+      currency: "USD",
+      account: "Cash",
+      category: "gifts",
+      isSplitTransaction: false,
     },
     {
       id: "10",
       title: "test 10",
-      date: addDays(new Date(), 1),
-      numberOfWords: 8,
-      transactionAmount: 100,
-      transactionType: "credit",
+      description: "Description of test 10",
+      date: addMonths(new Date(), 7),
+      transactionAmount: 400,
+      transactionType: "debit",
+      currency: "EUR",
+      account: "Checking",
+      category: "electronics",
+      isSplitTransaction: false,
     },
     {
       id: "11",
       title: "test 11",
-      date: addDays(new Date(), 2),
-      numberOfWords: 8,
-      transactionAmount: 100,
+      description: "Description of test 11",
+      date: addDays(new Date(), 1),
+      transactionAmount: 90,
       transactionType: "credit",
+      currency: "USD",
+      account: "Credit Card",
+      category: "groceries",
+      isSplitTransaction: true,
     },
     {
       id: "12",
       title: "test 12",
       date: addDays(new Date(), 3),
-      numberOfWords: 8,
-      transactionAmount: 100,
+      transactionAmount: 90,
       transactionType: "credit",
+      currency: "USD",
+      account: "Credit Card",
+      category: "groceries",
+      isSplitTransaction: true,
     },
   ]);
 
   useEffect(() => {
-    // console.log("Expenses:", expenses);
-    // console.log("\nIncome:", income);
-    // console.log("\nBalance:", balance);
-    console.log("\nDate:", date);
-    // console.log("\nView Mode:", viewMode);
-    // console.log("\nShow Total:", showTotal);
-    console.log("\nselectedDate: ", selectedDate);
-    console.log("\nhandleDateChange: ", handleDateChange);
-    setDate(selectedDate);
-  }, [
-    expenses,
-    income,
-    balance,
-    date,
-    viewMode,
-    showTotal,
-    collection,
-    selectedDate,
-    handleDateChange,
-  ]);
+    console.log("in page init: ", viewModeContext.viewMode);
+  }, []);
 
-  // const handleDateChange = (newDate: Date) => {
-  //   setDate(newDate);
-  //   console.log("Updated Date:", newDate);
-  // };
+  useEffect(() => {
+    console.log("in page: ", viewModeContext.viewMode);
+    handleDateChangeAndUpdate(selectedDate);
+  }, [selectedDate, viewModeContext.viewMode]);
+
+  const handleDateChangeAndUpdate = (newDate: Date) => {
+    handleDateChange(newDate);
+    setDate(newDate);
+  };
 
   const handleAddExpense = (amount: number) => {
     setExpenses(expenses + amount);
@@ -193,10 +226,10 @@ const MoneyTrackerPage: React.FC = () => {
       case ViewModeOptions.DAILY:
         return collection.filter((col) => isSameDay(col.date, date));
       case ViewModeOptions.WEEKLY:
-        const startOfWeekDate = startOfWeek(date);
+        const startOfWeekDate: any = startOfWeek(date);
         const endOfWeekDate = endOfWeek(date);
         return collection.filter((col) =>
-          isSameWeek(col.date, { weekStartsOn: startOfWeekDate })
+          isSameWeek(col.date, startOfWeekDate)
         );
       case ViewModeOptions.MONTHLY:
       default:
@@ -217,15 +250,7 @@ const MoneyTrackerPage: React.FC = () => {
       isSameMonth(item.date, date)
     );
 
-    const separatedCollection: {
-      [key: string]: {
-        id: string;
-        title: string;
-        numberOfWords: number;
-        transactionAmount: number;
-        transactionType: string;
-      }[];
-    } = {};
+    const separatedCollection: { [key: string]: typeof collection } = {};
     currentMonthCollection.forEach((item) => {
       const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
       if (separatedCollection[dateString]) {
@@ -255,7 +280,7 @@ const MoneyTrackerPage: React.FC = () => {
               <TrackerView
                 key={item.id}
                 text={item.title}
-                description={`Number of Words: ${item.numberOfWords}`}
+                description={`Description ${item.description}`}
                 imageUri="your-image-uri-here"
                 amount={item.transactionAmount}
                 transactionType={item.transactionType}
@@ -271,18 +296,12 @@ const MoneyTrackerPage: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // paddingTop: 5,
   },
   content: {
     flex: 1,
     paddingLeft: 20,
     paddingTop: 15,
-  },
-  listItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingRight: 20,
   },
   dateHeader: {
     fontSize: 18,
