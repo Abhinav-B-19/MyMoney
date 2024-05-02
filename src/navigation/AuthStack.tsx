@@ -1,28 +1,26 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
-// import Dashboard from "../screens/Dashboard";
-// import Profile from "../screens/Profile";
-import MoneyTrackerPage from "@/screens/MoneyTrackerPage";
+import React, { useState } from "react";
+import MyTabs from "@/components/MyTabs";
+import DateContext from "../context/DateContext";
 
 const Stack = createNativeStackNavigator();
 
 export default function AuthStack() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleDateChange = (newDate: Date) => {
+    setSelectedDate(newDate);
+  };
+
   return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="MoneyTrackerPage"
-        component={MoneyTrackerPage}
-        options={{
-          headerShown: false,
-        }}
-      />
-      {/* <Stack.Screen
-        name="Profile"
-        component={Profile}
-        options={{
-          headerShown: false,
-        }}
-      /> */}
-    </Stack.Navigator>
+    <DateContext.Provider value={{ selectedDate, handleDateChange }}>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="MyTabs"
+          component={MyTabs}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    </DateContext.Provider>
   );
 }

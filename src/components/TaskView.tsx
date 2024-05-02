@@ -1,44 +1,36 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, Image } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, View, Text, Image } from "react-native";
 
 interface TaskViewProps {
   text: string;
   description: string;
   imageUri: string;
+  amount: number;
+  transactionType: string;
 }
 
 const TrackerView: React.FC<TaskViewProps> = (props) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const handleExpandView = () => {
-    setExpanded(!expanded);
-  };
+  const amountColor = props.transactionType === "credit" ? "green" : "red";
 
   return (
-    <TouchableOpacity onPress={handleExpandView} style={styles.touchable}>
-      <View style={styles.item}>
-        <View style={styles.itemContent}>
-          <View style={styles.circle}>
-            <Image source={{ uri: props.imageUri }} style={styles.image} />
-          </View>
-          <Text style={styles.itemText} numberOfLines={2}>
-            {props.text}
-          </Text>
+    <View style={styles.item}>
+      <View style={styles.itemContent}>
+        <View style={styles.circle}>
+          <Image source={{ uri: props.imageUri }} style={styles.image} />
         </View>
-        {expanded && (
-          <View style={styles.expandedView}>
-            <Text style={styles.additionalContent}>{props.description}</Text>
-          </View>
-        )}
+        <Text style={styles.itemText} numberOfLines={2}>
+          {props.text}
+        </Text>
+        <Text style={[styles.amountText, { color: amountColor }]}>
+          {props.transactionType === "debit" ? "-" : "+"}
+          {Math.abs(props.amount)}
+        </Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  touchable: {
-    width: "98%",
-  },
   item: {
     backgroundColor: "#fff",
     padding: 15,
@@ -54,7 +46,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   itemText: {
-    width: "80%",
+    width: "60%",
+    fontSize: 16,
     marginLeft: 10,
   },
   expandedView: {
@@ -77,6 +70,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  amountText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
