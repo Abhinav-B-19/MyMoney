@@ -23,17 +23,17 @@ const Picker: React.FC<PickerProps> = ({ date, onDateChange, mode }) => {
   const startOfWeekDate = startOfWeek(date);
   const endOfWeekDate = endOfWeek(date);
 
-  useEffect(() => {
-    console.log(
-      "picker Picker: ",
-      mode,
-      date,
-      "startOfWeekDate: ",
-      startOfWeekDate,
-      "endOfWeekDate: ",
-      endOfWeekDate
-    );
-  });
+  // useEffect(() => {
+  //   console.log(
+  //     "picker Picker: ",
+  //     mode,
+  //     date,
+  //     "startOfWeekDate: ",
+  //     startOfWeekDate,
+  //     "endOfWeekDate: ",
+  //     endOfWeekDate
+  //   );
+  // });
 
   const handlePrev = () => {
     let newDate: Date;

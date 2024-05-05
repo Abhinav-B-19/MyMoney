@@ -36,7 +36,7 @@
       "transactionType": "credit",
       "currency": "USD",
       "account": "Cash",
-      "category": "transport",
+      "category": "Entertainment",
       "isSplitTransaction": false
     },
     {
@@ -54,7 +54,6 @@
     },
     {
       "id": "4",
-      "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
       "title": "test 4",
       "description": "Description of test 4",
       "date": "2024-05-07T03:55:53.389Z",
@@ -62,12 +61,12 @@
       "transactionType": "credit",
       "currency": "GBP",
       "account": "Credit Card",
-      "category": "entertainment",
+      "category": "Medical",
       "isSplitTransaction": false
     },
     {
-      "id": "5",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "5",
       "title": "test 5",
       "description": "Description of test 5",
       "date": "2024-07-07T03:55:53.389Z",
@@ -75,12 +74,12 @@
       "transactionType": "credit",
       "currency": "USD",
       "account": "Savings",
-      "category": "travel",
+      "category": "Shopping",
       "isSplitTransaction": false
     },
     {
-      "id": "6",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "6",
       "title": "test 6",
       "description": "Description of test 6",
       "date": "2024-08-07T03:55:53.389Z",
@@ -88,12 +87,12 @@
       "transactionType": "debit",
       "currency": "USD",
       "account": "Checking",
-      "category": "clothing",
+      "category": "Travel",
       "isSplitTransaction": false
     },
     {
-      "id": "7",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "7",
       "title": "test 7",
       "description": "Description of test 7",
       "date": "2024-09-07T03:55:53.389Z",
@@ -101,12 +100,12 @@
       "transactionType": "credit",
       "currency": "EUR",
       "account": "Credit Card",
-      "category": "health",
+      "category": "Car",
       "isSplitTransaction": false
     },
     {
-      "id": "8",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "8",
       "title": "test 8",
       "description": "Description of test 8",
       "date": "2024-10-07T03:55:53.389Z",
@@ -114,12 +113,12 @@
       "transactionType": "debit",
       "currency": "GBP",
       "account": "Savings",
-      "category": "education",
+      "category": "Food",
       "isSplitTransaction": true
     },
     {
-      "id": "9",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "9",
       "title": "test 9",
       "description": "Description of test 9",
       "date": "2024-11-07T03:55:53.389Z",
@@ -127,12 +126,12 @@
       "transactionType": "credit",
       "currency": "USD",
       "account": "Cash",
-      "category": "gifts",
+      "category": "Groceries",
       "isSplitTransaction": false
     },
     {
-      "id": "10",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "10",
       "title": "test 10",
       "description": "Description of test 10",
       "date": "2024-12-07T03:55:53.389Z",
@@ -140,12 +139,12 @@
       "transactionType": "debit",
       "currency": "EUR",
       "account": "Checking",
-      "category": "electronics",
+      "category": "Medical",
       "isSplitTransaction": false
     },
     {
-      "id": "11",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
+      "id": "11",
       "title": "test 11",
       "description": "Description of test 11",
       "date": "2024-05-03T03:55:53.389Z",
@@ -153,19 +152,33 @@
       "transactionType": "credit",
       "currency": "USD",
       "account": "Credit Card",
-      "category": "groceries",
+      "category": "Groceries",
       "isSplitTransaction": true
     },
     {
-      "id": "12",
+      "id": "1bfa",
       "userId": "X6XUIkD1Yoh2VEC11sssIs4cJs62",
-      "title": "test 12",
-      "date": "2024-05-05T03:55:53.389Z",
-      "transactionAmount": 90,
-      "transactionType": "credit",
-      "currency": "USD",
-      "account": "Credit Card",
-      "category": "groceries",
+      "title": "",
+      "description": "",
+      "date": "2024-05-03T07:45:00.756Z",
+      "transactionAmount": "",
+      "transactionType": "expense",
+      "currency": "₹",
+      "account": "",
+      "category": "",
+      "isSplitTransaction": false
+    },
+    {
+      "id": "affd",
+      "userId": "iYOOl1vWE8VhUJM7O4qPkPGnFnW2",
+      "title": "rent",
+      "description": "description",
+      "date": "2024-05-03T11:08:36.167Z",
+      "transactionAmount": "20000",
+      "transactionType": "expense",
+      "currency": "₹",
+      "account": "CASH",
+      "category": "Travel",
       "isSplitTransaction": true
     }
   ]

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
-import LoginScreen from "./src/screens/LoginScreen";
-import SignUpScreen from "./src/screens/SignUpScreen";
-import MoneyTrackerPage from "./src/screens/MoneyTrackerPage";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
 import { InitialScreenOnStart } from "./src/navigation/InitialScreenOnStart";
 import AuthStack from "./src/navigation/AuthStack";
-
+import { useAuth } from "@/context/AuthContext";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "./src/firebase/firebase";
 
@@ -17,25 +13,24 @@ const { Navigator, Screen } = createStackNavigator();
 
 const AppNavigator: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const { authUser, setAuthUser } = useAuth();
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      console.log("user", "uid: ", user.uid);
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("user", "uid: ", user.uid);
+        setAuthUser(user.uid);
+        // console.log("setAuthUser: ", authUser);
+        setUser(user);
+      } else {
+        setAuthUser(null);
+        setUser(null);
+      }
     });
   }, []);
-  return (
-    // <NavigationContainer>
-    //   <Navigator
-    //     initialRouteName="LoginScreen"
-    //     screenOptions={{ headerShown: false }}
-    //   >
-    //     <Screen name="LoginScreen" component={LoginScreen} />
-    //     <Screen name="SignUpScreen" component={SignUpScreen} />
-    //     <Screen name="MoneyTrackerPage" component={MoneyTrackerPage} />
-    //   </Navigator>
-    // </NavigationContainer>
 
+  return (
+    // <AuthProvider>
     <NavigationContainer>
       <Navigator initialRouteName="InitialScreenOnStart">
         {user ? (
@@ -53,6 +48,7 @@ const AppNavigator: React.FC = () => {
         )}
       </Navigator>
     </NavigationContainer>
+    // </AuthProvider>
   );
 };
 

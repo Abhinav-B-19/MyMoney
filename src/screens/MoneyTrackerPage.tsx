@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import {
   addDays,
   addMonths,
@@ -15,10 +15,19 @@ import { format } from "date-fns";
 import TrackerView from "@/components/TaskView";
 import DateContext from "../context/DateContext";
 import ViewModeContext from "@/context/ViewModeContext";
+import fetchTransData from "@/api/fetchTransData";
+import TaskActivityIndicator from "@/components/TaskActivityIndicator";
+import EditTaskViewPopOver, {
+  EditTaskViewPopOverProps,
+} from "@/components/EditTaskViewPopOver";
+import { useAuth } from "@/context/AuthContext";
+import { useTotal } from "@/context/TotalContext";
 
 const MoneyTrackerPage: React.FC = () => {
+  const [selectedTracker, setSelectedTracker] =
+    useState<EditTaskViewPopOverProps | null>(null);
   const { selectedDate, handleDateChange } = useContext(DateContext);
-
+  const [isLoading, setIsLoading] = useState(true);
   const [expenses, setExpenses] = useState<number>(0);
   const [income, setIncome] = useState<number>(0);
   const [balance, setBalance] = useState<number>(0);
@@ -28,186 +37,92 @@ const MoneyTrackerPage: React.FC = () => {
   >(ViewModeOptions.MONTHLY);
 
   const viewModeContext = useContext(ViewModeContext);
-  const [collection, setCollection] = useState([
-    {
-      id: "0",
-      title: "test",
-      description: "Sample transaction description",
-      date: new Date(),
-      transactionAmount: 100,
-      transactionType: "credit",
-      currency: "USD",
-      account: "Credit Card",
-      category: "room",
-      isSplitTransaction: false,
-    },
-    {
-      id: "1",
-      title: "test 1",
-      description: "Another sample transaction description",
-      date: new Date(),
-      transactionAmount: 50,
-      transactionType: "debit",
-      currency: "USD",
-      account: "Savings",
-      category: "food",
-      isSplitTransaction: false,
-    },
-    {
-      id: "2",
-      title: "test 2",
-      description: "Yet another sample transaction description",
-      date: addMonths(new Date(), 1),
-      transactionAmount: 100,
-      transactionType: "credit",
-      currency: "USD",
-      account: "Cash",
-      category: "transport",
-      isSplitTransaction: false,
-    },
-    {
-      id: "3",
-      title: "test 3",
-      description: "Description of test 3",
-      date: addDays(new Date(), 5),
-      transactionAmount: 200,
-      transactionType: "debit",
-      currency: "EUR",
-      account: "Checking",
-      category: "utilities",
-      isSplitTransaction: true,
-    },
-    {
-      id: "4",
-      title: "test 4",
-      description: "Description of test 4",
-      date: new Date(),
-      transactionAmount: 150,
-      transactionType: "credit",
-      currency: "GBP",
-      account: "Credit Card",
-      category: "entertainment",
-      isSplitTransaction: false,
-    },
-    {
-      id: "5",
-      title: "test 5",
-      description: "Description of test 5",
-      date: addMonths(new Date(), 2),
-      transactionAmount: 300,
-      transactionType: "credit",
-      currency: "USD",
-      account: "Savings",
-      category: "travel",
-      isSplitTransaction: false,
-    },
-    {
-      id: "6",
-      title: "test 6",
-      description: "Description of test 6",
-      date: addMonths(new Date(), 3),
-      transactionAmount: 250,
-      transactionType: "debit",
-      currency: "USD",
-      account: "Checking",
-      category: "clothing",
-      isSplitTransaction: false,
-    },
-    {
-      id: "7",
-      title: "test 7",
-      description: "Description of test 7",
-      date: addMonths(new Date(), 4),
-      transactionAmount: 180,
-      transactionType: "credit",
-      currency: "EUR",
-      account: "Credit Card",
-      category: "health",
-      isSplitTransaction: false,
-    },
-    {
-      id: "8",
-      title: "test 8",
-      description: "Description of test 8",
-      date: addMonths(new Date(), 5),
-      transactionAmount: 120,
-      transactionType: "debit",
-      currency: "GBP",
-      account: "Savings",
-      category: "education",
-      isSplitTransaction: true,
-    },
-    {
-      id: "9",
-      title: "test 9",
-      description: "Description of test 9",
-      date: addMonths(new Date(), 6),
-      transactionAmount: 350,
-      transactionType: "credit",
-      currency: "USD",
-      account: "Cash",
-      category: "gifts",
-      isSplitTransaction: false,
-    },
-    {
-      id: "10",
-      title: "test 10",
-      description: "Description of test 10",
-      date: addMonths(new Date(), 7),
-      transactionAmount: 400,
-      transactionType: "debit",
-      currency: "EUR",
-      account: "Checking",
-      category: "electronics",
-      isSplitTransaction: false,
-    },
-    {
-      id: "11",
-      title: "test 11",
-      description: "Description of test 11",
-      date: addDays(new Date(), 1),
-      transactionAmount: 90,
-      transactionType: "credit",
-      currency: "USD",
-      account: "Credit Card",
-      category: "groceries",
-      isSplitTransaction: true,
-    },
-    {
-      id: "12",
-      title: "test 12",
-      date: addDays(new Date(), 3),
-      transactionAmount: 90,
-      transactionType: "credit",
-      currency: "USD",
-      account: "Credit Card",
-      category: "groceries",
-      isSplitTransaction: true,
-    },
-  ]);
+
+  const [collection, setCollection] = useState([]);
+  const [initialDataFetched, setInitialDataFetched] = useState(false);
+  const { authUser, setAuthUser } = useAuth();
+  const {
+    expenseTotal,
+    setExpenseTotal,
+    incomeTotal,
+    setIncomeTotal,
+    overallTotal,
+    setOverallTotal,
+  } = useTotal();
 
   useEffect(() => {
-    console.log("in page init: ", viewModeContext.viewMode);
+    // console.log("in page: ", viewModeContext.viewMode);
+    handleDateChangeAndUpdate(selectedDate);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    console.log("setAuthUser: ", authUser);
+  }, [authUser]);
+
+  useEffect(() => {
+    fetchDataIfNeeded();
   }, []);
 
   useEffect(() => {
-    console.log("in page: ", viewModeContext.viewMode);
-    handleDateChangeAndUpdate(selectedDate);
-  }, [selectedDate, viewModeContext.viewMode]);
+    calculateTotals();
+    // console.log(collection);
+  }, [collection]);
+
+  useEffect(() => {
+    // filterData();
+    console.log("viewMode in tracker: ", viewMode);
+    // Use filteredData to render the filtered data based on the selected view mode
+  }, [viewMode]);
+
+  const fetchDataIfNeeded = async () => {
+    try {
+      const response = await fetchTransData(authUser);
+      if (response.status === 200 || response.status === 201) {
+        setCollection(response.data);
+        setIsLoading(false);
+        setInitialDataFetched(true);
+      } else {
+        console.error("Failed to fetch transactions:", response.error);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+
+  const calculateTotals = () => {
+    let totalExpense = 0;
+    let totalIncome = 0;
+
+    collection.forEach((item) => {
+      if (item.transactionType === "debit") {
+        totalExpense += item.transactionAmount;
+      } else if (item.transactionType === "credit") {
+        totalIncome += item.transactionAmount;
+      }
+    });
+
+    setExpenseTotal(totalExpense);
+    setIncomeTotal(totalIncome);
+    setOverallTotal(totalIncome - totalExpense);
+  };
+
+  const setApiData = async () => {
+    try {
+      const response = await fetchTransData("authUser");
+      if (response.status === 200 || response.status === 201) {
+        setCollection(response.data);
+        setIsLoading(false);
+      } else {
+        console.error("Failed to fetch transactions:", response.error);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
 
   const handleDateChangeAndUpdate = (newDate: Date) => {
     handleDateChange(newDate);
     setDate(newDate);
-  };
-
-  const handleAddExpense = (amount: number) => {
-    setExpenses(expenses + amount);
-    setBalance(balance - amount);
-  };
-
-  const handleAddIncome = (amount: number) => {
-    setIncome(income + amount);
-    setBalance(balance + amount);
   };
 
   const handleFilterChange = (filter: string) => {
@@ -221,21 +136,24 @@ const MoneyTrackerPage: React.FC = () => {
   };
 
   // Filter data based on the selected view mode
-  const filterData = () => {
-    switch (viewMode) {
-      case ViewModeOptions.DAILY:
-        return collection.filter((col) => isSameDay(col.date, date));
-      case ViewModeOptions.WEEKLY:
-        const startOfWeekDate: any = startOfWeek(date);
-        const endOfWeekDate = endOfWeek(date);
-        return collection.filter((col) =>
-          isSameWeek(col.date, startOfWeekDate)
-        );
-      case ViewModeOptions.MONTHLY:
-      default:
-        return collection.filter((col) => isSameMonth(col.date, date));
-    }
-  };
+  // const filterData = () => {
+  //   switch (viewMode) {
+  //     case ViewModeOptions.DAILY:
+  //       console.log("in DAILY");
+  //       return collection.filter((col) => isSameDay(col.date, date));
+  //     case ViewModeOptions.WEEKLY:
+  //       console.log("in WEEKLY");
+  //       const startOfWeekDate: any = startOfWeek(date);
+  //       const endOfWeekDate = endOfWeek(date);
+  //       return collection.filter((col) =>
+  //         isSameWeek(col.date, startOfWeekDate)
+  //       );
+  //     case ViewModeOptions.MONTHLY:
+  //       console.log("in MONTHLY");
+  //     default:
+  //       return collection.filter((col) => isSameMonth(col.date, date));
+  //   }
+  // };
 
   // Function to toggle view mode
   const toggleViewMode = (
@@ -244,14 +162,59 @@ const MoneyTrackerPage: React.FC = () => {
     setViewMode(mode);
   };
 
+  // const separateCollectionByDate = () => {
+  //   // Filter the collection to include only items from the current month
+  //   const currentMonthCollection = collection.filter((item) =>
+  //     isSameMonth(item.date, date)
+  //   );
+
+  //   const separatedCollection: { [key: string]: typeof collection } = {};
+  //   currentMonthCollection.forEach((item) => {
+  //     const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
+  //     if (separatedCollection[dateString]) {
+  //       separatedCollection[dateString].push(item);
+  //     } else {
+  //       separatedCollection[dateString] = [item];
+  //     }
+  //   });
+  //   return separatedCollection;
+  // };
+
   const separateCollectionByDate = () => {
-    // Filter the collection to include only items from the current month
-    const currentMonthCollection = collection.filter((item) =>
-      isSameMonth(item.date, date)
-    );
+    let filteredCollection = collection;
+
+    switch (viewMode) {
+      case "DAILY": //case ViewModeOptions.DAILY:
+        console.log("in DAILY");
+        filteredCollection = collection.filter((item) =>
+          isSameDay(item.date, date)
+        );
+        break;
+      case "WEEKLY": //case ViewModeOptions.WEEKLY:
+        console.log("in WEEKLY");
+        const startOfWeekDate = startOfWeek(date);
+        const endOfWeekDate = endOfWeek(date);
+        filteredCollection = collection.filter(
+          (item) =>
+            isSameWeek(item.date, startOfWeekDate, { weekStartsOn: 1 }) &&
+            item.date <= endOfWeekDate
+        );
+        break;
+      case "MONTHLY": //case ViewModeOptions.MONTHLY:
+        console.log("in MONTHLY");
+        filteredCollection = collection.filter((item) =>
+          isSameMonth(item.date, date)
+        );
+      default:
+        // console.log("in MONTHLY");
+        // filteredCollection = collection.filter((item) =>
+        //   isSameMonth(item.date, date)
+        // );
+        break;
+    }
 
     const separatedCollection: { [key: string]: typeof collection } = {};
-    currentMonthCollection.forEach((item) => {
+    filteredCollection.forEach((item) => {
       const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
       if (separatedCollection[dateString]) {
         separatedCollection[dateString].push(item);
@@ -259,43 +222,101 @@ const MoneyTrackerPage: React.FC = () => {
         separatedCollection[dateString] = [item];
       }
     });
+
     return separatedCollection;
+  };
+
+  const handleTrackerPress = (userID: string, id: string) => {
+    // console.log("Clicked tracker:", userID, id); // Log to check the values
+    const selected = collection.find(
+      (item) => item.userID === userID && item.id === id
+    ); // Find the selected tracker item
+    // console.log("Selected tracker:", selected); // Log to check the selected tracker
+    if (selected) {
+      setSelectedTracker(selected); // Set the selected tracker to open the EditTaskViewPopOver
+    }
+  };
+
+  const handleDeleteSuccess = () => {
+    // Close the popover or perform any other action needed
+    fetchDataIfNeeded();
+    setSelectedTracker(null); // Reset selectedTracker to close the popover
   };
 
   // Get separated collection data
   const separatedCollection = separateCollectionByDate();
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <TaskActivityIndicator style={styles.loadingIndicator} />
+      </View>
+    );
+  }
+
   return (
-    <FlatList
-      style={styles.container}
-      data={Object.entries(separatedCollection)}
-      keyExtractor={(item) => item[0]} // Using date string as key
-      renderItem={({ item }) => (
-        <View style={styles.content}>
-          <Text style={styles.dateHeader}>{item[0]}</Text>
-          <FlatList
-            data={item[1]}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TrackerView
-                key={item.id}
-                text={item.title}
-                description={`Description ${item.description}`}
-                imageUri="your-image-uri-here"
-                amount={item.transactionAmount}
-                transactionType={item.transactionType}
-              />
-            )}
+    <>
+      <FlatList
+        style={styles.container}
+        data={Object.entries(separatedCollection)}
+        keyExtractor={(item, index) => index.toString()} // Use the index as the key
+        renderItem={({ item }) => (
+          <View style={styles.content}>
+            <Text style={styles.dateHeader}>{item[0]}</Text>
+            <FlatList
+              data={item[1]}
+              keyExtractor={(item) => item.id} // Use a unique identifier as the key
+              renderItem={({ item }) => (
+                <TrackerView
+                  key={item.id} // Ensure userID is unique
+                  text={item.title}
+                  category={item.category}
+                  description={`Description ${item.description}`}
+                  // imageUri={`../../assets/Category/${item.category}.png`}
+                  amount={item.transactionAmount}
+                  transactionType={item.transactionType}
+                  onPress={() => handleTrackerPress(item.userID, item.id)}
+                  id={item.id}
+                  userId={item.userId}
+                  title={item.title}
+                  date={item.date}
+                  transactionAmount={item.transactionAmount}
+                  currency={item.currency}
+                  account={item.account}
+                  isSplitTransaction={item.isSplitTransaction}
+                />
+              )}
+            />
+          </View>
+        )}
+      />
+      {selectedTracker && (
+        <View style={styles.overlay}>
+          <EditTaskViewPopOver
+            {...selectedTracker}
+            onClose={() => setSelectedTracker(null)} // Pass function to close the popover
+            onEdit={() => console.log("Edit button clicked")} // Log when edit button is clicked
+            onDelete={() => console.log("Delete button clicked")}
+            onDeleteSuccess={handleDeleteSuccess} // Log when delete button is clicked
           />
         </View>
       )}
-    />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor: "red",
+  },
+  loadingIndicator: {
+    marginTop: 20,
   },
   content: {
     flex: 1,
@@ -307,6 +328,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  closeButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 5,
+  },
+
+  closeButtonText: {
+    color: "#000",
+    fontWeight: "bold",
   },
 });
 

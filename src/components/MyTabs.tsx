@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useContext, useEffect } from "react";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -11,6 +11,7 @@ import Accounts from "./Tabs/Accounts";
 import Analysis from "./Tabs/Analysis";
 import Budgets from "./Tabs/Budgets";
 import DateContext from "../context/DateContext";
+import { COLORS } from "@/constants/colors";
 
 type RootTabParamList = {
   Records: undefined;
@@ -28,6 +29,14 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   const { selectedDate, handleDateChange } = useContext(DateContext);
+
+  // useEffect(() => {
+  //   console.log("authUser in MyTabs: ", authUser);
+  // }, [authUser]);
+
+  const navigateToAddTransactionDetails = () => {
+    navigation.navigate("AddTransactionDetails"); // Navigate to AddTransactionDetails screen
+  };
 
   return (
     <View style={styles.container}>
@@ -99,6 +108,12 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
         />
       </Tab.Navigator>
       {/* </DateContext.Provider> */}
+      <TouchableOpacity
+        style={styles.plusIconContainer}
+        onPress={navigateToAddTransactionDetails}
+      >
+        <MaterialCommunityIcons name="plus" size={24} color="white" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -106,6 +121,17 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  plusIconContainer: {
+    position: "absolute",
+    bottom: 60,
+    right: 15,
+    backgroundColor: COLORS.ACCENT,
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

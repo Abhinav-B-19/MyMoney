@@ -1,32 +1,81 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View, Text, Image } from "react-native";
+import { StyleSheet, View, Text, Image, TouchableOpacity } from "react-native";
+// Import the images statically
+import carIcon from "../../assets/Category/car.png";
+import entertainmentIcon from "../../assets/Category/entertainment.png";
+import fitnessIcon from "../../assets/Category/fitness.png";
+import foodIcon from "../../assets/Category/food.png";
+import groceriesIcon from "../../assets/Category/groceries.png";
+import medicalIcon from "../../assets/Category/medical.png";
+import shoppingIcon from "../../assets/Category/shopping.png";
+import travelIcon from "../../assets/Category/travel.png";
 
 interface TaskViewProps {
   text: string;
+  category: string;
   description: string;
-  imageUri: string;
   amount: number;
   transactionType: string;
+  id: string;
+  userId: string;
+  title: string;
+  date: string;
+  transactionAmount: number;
+  currency: string;
+  account: string;
+  isSplitTransaction: boolean;
+  onPress?: () => void;
 }
 
-const TrackerView: React.FC<TaskViewProps> = (props) => {
+const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
   const amountColor = props.transactionType === "credit" ? "green" : "red";
+  // useEffect(() => {
+  //   console.log(props.title, props.category);
+  // }, [props.category]);
+
+  // Map category names to their corresponding imported images
+  const categoryImages = {
+    food: foodIcon,
+    groceries: groceriesIcon,
+    travel: travelIcon,
+    car: carIcon,
+    entertainment: entertainmentIcon,
+    fitness: fitnessIcon,
+    medical: medicalIcon,
+    shopping: shoppingIcon,
+    room: require("../../assets/Category/empty.png"),
+    utilities: require("../../assets/Category/empty.png"),
+  };
 
   return (
-    <View style={styles.item}>
-      <View style={styles.itemContent}>
-        <View style={styles.circle}>
-          <Image source={{ uri: props.imageUri }} style={styles.image} />
+    <TouchableOpacity onPress={onPress}>
+      <View style={styles.item}>
+        <View style={styles.itemContent}>
+          <View style={styles.circle}>
+            {/* Use the mapped image based on the category */}
+            <Image
+              source={categoryImages[props.category]}
+              style={styles.image}
+              accessibilityLabel={props.category} // Set accessibilityLabel to the category
+              defaultSource={require("../../assets/Category/empty.png")}
+            />
+            {/* <Image
+              source={carIcon}
+              style={styles.image}
+              accessibilityLabel="car" // Set accessibilityLabel to the appropriate label
+              defaultSource={require("../../assets/Category/empty.png")}
+            /> */}
+          </View>
+          <Text style={styles.itemText} numberOfLines={2}>
+            {props.text}
+          </Text>
+          <Text style={[styles.amountText, { color: amountColor }]}>
+            {props.transactionType === "debit" ? "-" : "+"}
+            {Math.abs(props.amount)}
+          </Text>
         </View>
-        <Text style={styles.itemText} numberOfLines={2}>
-          {props.text}
-        </Text>
-        <Text style={[styles.amountText, { color: amountColor }]}>
-          {props.transactionType === "debit" ? "-" : "+"}
-          {Math.abs(props.amount)}
-        </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -67,9 +116,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   image: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   amountText: {
     fontSize: 16,

@@ -50,7 +50,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         const user = userCredential.user;
         setLoading(false);
         alert("Login successful :)");
-        navigation.navigate("MoneyTrackerPage");
+        // navigation.navigate("MoneyTrackerPage");
       })
       .catch((err) => {
         alert(err.message);

@@ -5,16 +5,21 @@ import { Provider } from "react-redux";
 import { store } from "./src/redux/store";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
+import { AuthProvider } from "@/context/AuthContext";
+import { TotalProvider } from "@/context/TotalContext";
 const App: React.FC = () => {
   return (
-    <Provider store={store}>
-      <PaperProvider>
-        {/* <GestureHandlerRootView> */}
-        <AppNavigator />
-        {/* </GestureHandlerRootView> */}
-      </PaperProvider>
-    </Provider>
+    <AuthProvider>
+      <TotalProvider>
+        <Provider store={store}>
+          <PaperProvider>
+            {/* <GestureHandlerRootView> */}
+            <AppNavigator />
+            {/* </GestureHandlerRootView> */}
+          </PaperProvider>
+        </Provider>
+      </TotalProvider>
+    </AuthProvider>
   );
 };
 
