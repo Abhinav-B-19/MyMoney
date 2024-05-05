@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import {
-  addDays,
-  addMonths,
   isSameDay,
   isSameWeek,
   isSameMonth,
@@ -28,30 +26,16 @@ const MoneyTrackerPage: React.FC = () => {
     useState<EditTaskViewPopOverProps | null>(null);
   const { selectedDate, handleDateChange } = useContext(DateContext);
   const [isLoading, setIsLoading] = useState(true);
-  const [expenses, setExpenses] = useState<number>(0);
-  const [income, setIncome] = useState<number>(0);
-  const [balance, setBalance] = useState<number>(0);
   const [date, setDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<
-    (typeof ViewModeOptions)[keyof typeof ViewModeOptions]
-  >(ViewModeOptions.MONTHLY);
 
   const viewModeContext = useContext(ViewModeContext);
 
   const [collection, setCollection] = useState([]);
   const [initialDataFetched, setInitialDataFetched] = useState(false);
   const { authUser, setAuthUser } = useAuth();
-  const {
-    expenseTotal,
-    setExpenseTotal,
-    incomeTotal,
-    setIncomeTotal,
-    overallTotal,
-    setOverallTotal,
-  } = useTotal();
+  const { setExpenseTotal, setIncomeTotal, setOverallTotal } = useTotal();
 
   useEffect(() => {
-    // console.log("in page: ", viewModeContext.viewMode);
     handleDateChangeAndUpdate(selectedDate);
   }, [selectedDate]);
 
@@ -62,17 +46,6 @@ const MoneyTrackerPage: React.FC = () => {
   useEffect(() => {
     fetchDataIfNeeded();
   }, []);
-
-  useEffect(() => {
-    calculateTotals();
-    // console.log(collection);
-  }, [collection]);
-
-  useEffect(() => {
-    // filterData();
-    console.log("viewMode in tracker: ", viewMode);
-    // Use filteredData to render the filtered data based on the selected view mode
-  }, [viewMode]);
 
   const fetchDataIfNeeded = async () => {
     try {
@@ -89,11 +62,11 @@ const MoneyTrackerPage: React.FC = () => {
     }
   };
 
-  const calculateTotals = () => {
+  const calculateTotals = (filteredCollection) => {
     let totalExpense = 0;
     let totalIncome = 0;
 
-    collection.forEach((item) => {
+    filteredCollection.forEach((item) => {
       if (item.transactionType === "debit") {
         totalExpense += item.transactionAmount;
       } else if (item.transactionType === "credit") {
@@ -135,84 +108,42 @@ const MoneyTrackerPage: React.FC = () => {
     // Handle the filter change here
   };
 
-  // Filter data based on the selected view mode
-  // const filterData = () => {
-  //   switch (viewMode) {
-  //     case ViewModeOptions.DAILY:
-  //       console.log("in DAILY");
-  //       return collection.filter((col) => isSameDay(col.date, date));
-  //     case ViewModeOptions.WEEKLY:
-  //       console.log("in WEEKLY");
-  //       const startOfWeekDate: any = startOfWeek(date);
-  //       const endOfWeekDate = endOfWeek(date);
-  //       return collection.filter((col) =>
-  //         isSameWeek(col.date, startOfWeekDate)
-  //       );
-  //     case ViewModeOptions.MONTHLY:
-  //       console.log("in MONTHLY");
-  //     default:
-  //       return collection.filter((col) => isSameMonth(col.date, date));
-  //   }
-  // };
-
-  // Function to toggle view mode
-  const toggleViewMode = (
-    mode: (typeof ViewModeOptions)[keyof typeof ViewModeOptions]
-  ) => {
-    setViewMode(mode);
-  };
-
-  // const separateCollectionByDate = () => {
-  //   // Filter the collection to include only items from the current month
-  //   const currentMonthCollection = collection.filter((item) =>
-  //     isSameMonth(item.date, date)
-  //   );
-
-  //   const separatedCollection: { [key: string]: typeof collection } = {};
-  //   currentMonthCollection.forEach((item) => {
-  //     const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
-  //     if (separatedCollection[dateString]) {
-  //       separatedCollection[dateString].push(item);
-  //     } else {
-  //       separatedCollection[dateString] = [item];
-  //     }
-  //   });
-  //   return separatedCollection;
-  // };
-
-  const separateCollectionByDate = () => {
+  const separateCollectionByViewMode = () => {
     let filteredCollection = collection;
 
-    switch (viewMode) {
-      case "DAILY": //case ViewModeOptions.DAILY:
-        console.log("in DAILY");
+    switch (viewModeContext.viewMode) {
+      case "daily": //case ViewModeOptions.DAILY:
+        // console.log("in DAILY");
         filteredCollection = collection.filter((item) =>
           isSameDay(item.date, date)
         );
         break;
-      case "WEEKLY": //case ViewModeOptions.WEEKLY:
-        console.log("in WEEKLY");
-        const startOfWeekDate = startOfWeek(date);
-        const endOfWeekDate = endOfWeek(date);
-        filteredCollection = collection.filter(
-          (item) =>
-            isSameWeek(item.date, startOfWeekDate, { weekStartsOn: 1 }) &&
-            item.date <= endOfWeekDate
-        );
+      case "weekly":
+        // console.log("in WEEKLY");
+        const startOfWeekDate = startOfWeek(date, { weekStartsOn: 0 }); // Adjust week start day if necessary
+        const endOfWeekDate = endOfWeek(date, { weekStartsOn: 0 });
+        // console.log("Start of Week:", format(startOfWeekDate, "MMM d"));
+        // console.log("End of Week:", format(endOfWeekDate, "MMM d"));
+
+        filteredCollection = collection.filter((item) => {
+          const itemDate = new Date(item.date); // Convert item date to Date object
+          const isWithinWeek =
+            itemDate >= startOfWeekDate && itemDate <= endOfWeekDate;
+          // console.log(`Item Date: ${itemDate}, isWithinWeek: ${isWithinWeek}`);
+          return isWithinWeek;
+        });
+        // console.log("Filtered Collection:", filteredCollection);
         break;
-      case "MONTHLY": //case ViewModeOptions.MONTHLY:
-        console.log("in MONTHLY");
+      case "monthly": //case ViewModeOptions.MONTHLY:
+        // console.log("in MONTHLY");
         filteredCollection = collection.filter((item) =>
           isSameMonth(item.date, date)
         );
       default:
-        // console.log("in MONTHLY");
-        // filteredCollection = collection.filter((item) =>
-        //   isSameMonth(item.date, date)
-        // );
         break;
     }
-
+    // console.log(filteredCollection);
+    calculateTotals(filteredCollection);
     const separatedCollection: { [key: string]: typeof collection } = {};
     filteredCollection.forEach((item) => {
       const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
@@ -222,7 +153,7 @@ const MoneyTrackerPage: React.FC = () => {
         separatedCollection[dateString] = [item];
       }
     });
-
+    // console.log("separatedCollection: ", separatedCollection);
     return separatedCollection;
   };
 
@@ -244,7 +175,7 @@ const MoneyTrackerPage: React.FC = () => {
   };
 
   // Get separated collection data
-  const separatedCollection = separateCollectionByDate();
+  const separatedCollection = separateCollectionByViewMode();
 
   if (isLoading) {
     return (
@@ -335,7 +266,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },

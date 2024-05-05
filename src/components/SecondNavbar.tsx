@@ -31,6 +31,9 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
 
   const { expenseTotal, incomeTotal, overallTotal } = useTotal();
 
+  useEffect(() => {
+    console.log("viewMode in sn: ", viewMode);
+  }, []);
   const handleDateChange = (newDate: Date) => {
     setDate(newDate);
     onDateChange(newDate);
