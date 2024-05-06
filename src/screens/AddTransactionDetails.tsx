@@ -1,13 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import postNewData from "@/api/postNewData";
+import { COLORS } from "@/constants/colors";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import updateTransactionData from "@/api/updateTransactionData";
 
 interface TransactionDetailsProps {
   initialFormData?: {
@@ -27,21 +33,50 @@ interface TransactionDetailsProps {
 const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   initialFormData = {},
 }) => {
-  // const { authUser, setAuthUser } = useAuth();
+  const { authUser, setAuthUser } = useAuth();
+  const route = useRoute();
 
-  const [formData, setFormData] = useState({
-    // userId: authUser,
+  const { initialFormData: routeInitialFormData } = route.params ?? {};
+  const mergedInitialFormData = { ...initialFormData, ...routeInitialFormData };
+  const isDataPassed = Object.keys(mergedInitialFormData).length > 0;
+
+  const [selectingField, setSelectingField] = useState("");
+  const [isSelectingVisible, setIsSelectingVisible] = useState(false);
+  const navigation = useNavigation();
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const defaultFormData = {
+    userId: authUser,
     title: "",
     description: "",
     date: new Date().toISOString(),
     transactionAmount: "",
-    transactionType: "expense",
+    transactionType: "debit",
     currency: "\u20B9",
     account: "",
     category: "",
     isSplitTransaction: false,
-    ...initialFormData, // Merge with default values if provided
+  };
+
+  const [formData, setFormData] = useState({
+    ...defaultFormData,
+    ...mergedInitialFormData, // Use mergedInitialFormData
   });
+
+  // useEffect(() => {
+  //   console.log("Initial Form Data:", initialFormData);
+  //   console.log("Merged Form Data:", mergedInitialFormData);
+  // }, []);
+
+  useEffect(() => {
+    console.log("isDataPassed: ", isDataPassed);
+    console.log("mergedInitialFormData: ", mergedInitialFormData);
+  }, [initialFormData]);
+
+  // useEffect(() => {
+  //   console.log("Form Data Updated:", formData); // Log whenever formData changes
+  // }, [formData]);
 
   const [categories, setCategories] = useState<string[]>([
     "car",
@@ -59,11 +94,25 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     "SBI",
     "AXIS",
   ]);
-  const [selectingField, setSelectingField] = useState(""); // Track which field is being selected
-  const [isSelectingVisible, setIsSelectingVisible] = useState(false); // Track whether the selection options are visible
-  const navigation = useNavigation();
 
-  const handleChange = (name: string, value: string) => {
+  const showDatePicker = () => {
+    console.log("showDatePicker");
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (date) => {
+    handleChange("date", date);
+    hideDatePicker();
+  };
+
+  // const handleChange = (name: string, value: string) => {
+  //   setFormData({ ...formData, [name]: value });
+  // };
+  const handleChange = (name: string, value: string | number | Date) => {
     setFormData({ ...formData, [name]: value });
   };
 
@@ -82,19 +131,51 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   };
 
   const handleSubmit = async () => {
-    console.log("Form data:", formData);
+    setIsLoading(true);
+    // Convert transactionType to appropriate values
+    const transactionType =
+      formData.transactionType === "credit" ? "credit" : "debit";
+
+    // Create a new formData object with updated transactionType
+    const updatedFormData = { ...formData, transactionType };
+
+    console.log("Form data:", updatedFormData);
 
     try {
-      const response = await postNewData(formData);
+      const response = await postNewData(updatedFormData);
       console.log(response);
-
-      // Implement logic to handle successful submission
-      // For example, navigate to another screen
-      // navigation.navigate("SuccessScreen");
       handleBack();
     } catch (error) {
       console.error("Error posting data:", error);
-      // Implement logic to handle errors
+    } finally {
+      setIsLoading(false); // Set loading to false when submit ends (success or failure)
+    }
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      // Convert transactionType to appropriate values
+      const transactionType =
+        formData.transactionType === "credit" ? "credit" : "debit";
+
+      // Create a new formData object with updated transactionType
+      const updatedFormData = { ...formData, transactionType };
+
+      // Extract the ID of the transaction
+      const id = updatedFormData.id;
+
+      console.log("Form data in save:", id);
+
+      // Call updateTransactionData with the ID and updated data
+      const updateResponse = await updateTransactionData(id, updatedFormData);
+      console.log(updateResponse);
+
+      handleBack(); // Navigate back after saving
+    } catch (error) {
+      console.error("Error saving data:", error);
+    } finally {
+      setIsLoading(false); // Set loading to false when submit ends (success or failure)
     }
   };
 
@@ -104,14 +185,17 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 
   const handleCategorySelect = (category: string) => {
     setFormData({ ...formData, category });
-    setIsSelectingVisible(false); // Close the selection options
+    setIsSelectingVisible(false);
   };
 
   const handleAccountSelect = (account: string) => {
     setFormData({ ...formData, account });
-    setIsSelectingVisible(false); // Close the selection options
+    setIsSelectingVisible(false);
   };
 
+  // const handleTransactionTypeSelect = (transactionType: string) => {
+  //   setFormData({ ...formData, transactionType });
+  // };
   const handleTransactionTypeSelect = (transactionType: string) => {
     setFormData({ ...formData, transactionType });
   };
@@ -125,35 +209,71 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Transaction Details</Text>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={24}
+            color={COLORS.PRIMARY}
+          />
+        </TouchableOpacity>
+        <Text style={styles.title}>Add Transaction Details</Text>
+      </View>
       <View style={styles.form}>
         <View style={styles.transactionTypeContainer}>
           <TouchableOpacity
             style={[
               styles.transactionTypeButton,
-              formData.transactionType === "income" && styles.selectedButton,
+              formData.transactionType === "credit" &&
+                styles.selectedTransactionTypeButton,
             ]}
-            onPress={() => handleTransactionTypeSelect("income")}
+            onPress={() => handleTransactionTypeSelect("credit")}
           >
-            <Text style={styles.buttonText}>Income</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                formData.transactionType === "credit" &&
+                  styles.selectedButtonText,
+              ]}
+            >
+              Income
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.transactionTypeButton,
-              formData.transactionType === "expense" && styles.selectedButton,
+              formData.transactionType === "debit" &&
+                styles.selectedTransactionTypeButton,
             ]}
-            onPress={() => handleTransactionTypeSelect("expense")}
+            onPress={() => handleTransactionTypeSelect("debit")}
           >
-            <Text style={styles.buttonText}>Expense</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                formData.transactionType === "debit" &&
+                  styles.selectedButtonText,
+              ]}
+            >
+              Expense
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.transactionTypeButton,
-              formData.transactionType === "transfer" && styles.selectedButton,
+              formData.transactionType === "transfer" &&
+                styles.selectedTransactionTypeButton,
             ]}
             onPress={() => handleTransactionTypeSelect("transfer")}
           >
-            <Text style={styles.buttonText}>Transfer</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                formData.transactionType === "transfer" &&
+                  styles.selectedButtonText,
+              ]}
+            >
+              Transfer
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -161,8 +281,8 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <TouchableOpacity
             style={styles.selectButton}
             onPress={() => {
-              setSelectingField("category"); // Update selectingField state to "category"
-              setIsSelectingVisible(true); // Open the selection options
+              setSelectingField("category");
+              setIsSelectingVisible(true);
             }}
           >
             <Text style={styles.buttonText}>
@@ -172,8 +292,8 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <TouchableOpacity
             style={styles.selectButton}
             onPress={() => {
-              setSelectingField("account"); // Update selectingField state to "account"
-              setIsSelectingVisible(true); // Open the selection options
+              setSelectingField("account");
+              setIsSelectingVisible(true);
             }}
           >
             <Text style={styles.buttonText}>
@@ -186,23 +306,51 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           style={styles.input}
           placeholder="Title"
           onChangeText={(text) => handleChange("title", text)}
+          value={formData.title}
         />
         <TextInput
           style={styles.input}
           placeholder="Description"
           onChangeText={(text) => handleChange("description", text)}
+          value={formData.description}
         />
-        <TextInput
+        <View style={styles.dateInputContainer}>
+          <TextInput
+            style={styles.dateInput}
+            placeholder="Date"
+            onChangeText={(text) => handleChange("date", text)}
+            value={formatDate(formData.date)}
+            editable={false} // Disable editing
+          />
+          <TouchableOpacity
+            style={styles.calendarIcon}
+            onPress={showDatePicker}
+          >
+            <MaterialCommunityIcons
+              name="calendar"
+              size={24}
+              color={COLORS.PRIMARY}
+            />
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={handleConfirm}
+              onCancel={hideDatePicker}
+            />
+          </TouchableOpacity>
+        </View>
+        {/* <TextInput
           style={styles.input}
-          placeholder="Date"
-          onChangeText={(text) => handleChange("date", text)}
-          value={formatDate(formData.date)}
-        />
+          placeholder="Transaction Amount"
+          onChangeText={(text) => handleChange("transactionAmount", text)}
+        /> */}
         <TextInput
           style={styles.input}
           placeholder="Transaction Amount"
           onChangeText={(text) => handleChange("transactionAmount", text)}
+          value={formData.transactionAmount.toString()}
         />
+
         <TextInput
           style={styles.input}
           placeholder="Currency"
@@ -210,16 +358,12 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           value={formData.currency}
         />
       </View>
-      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
 
-      {isSelectingVisible && ( // Only render selection options if isSelectingVisible is true
+      {isSelectingVisible && (
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             {selectingField === "category"
-              ? // Render category options if selectingField is "category"
-                categories.map((category, index) => (
+              ? categories.map((category, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.modalOption}
@@ -228,8 +372,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
                     <Text style={styles.modalOptionText}>{category}</Text>
                   </TouchableOpacity>
                 ))
-              : // Render account options if selectingField is "account"
-                accounts.map((account, index) => (
+              : accounts.map((account, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.modalOption}
@@ -253,9 +396,17 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           Split Transaction: {formData.isSplitTransaction ? "Yes" : "No"}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit</Text>
-      </TouchableOpacity>
+      {isLoading ? (
+        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+      ) : isDataPassed ? (
+        <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Submit</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -263,25 +414,71 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: COLORS.WHITE,
+  },
+  header: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center", // Center content horizontally
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
+  backButton: {
+    position: "absolute",
+    left: 20,
+    paddingTop: 40,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 20,
+    color: COLORS.PRIMARY,
   },
   form: {
-    width: "80%",
+    paddingHorizontal: 20,
+    marginTop: 100, // Adjust the marginTop as needed
   },
   selectContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
   },
+  // transactionTypeButton: {
+  //   padding: 10,
+  //   borderRadius: 5,
+  //   alignItems: "center",
+  //   width: "30%",
+  //   borderWidth: 1,
+  //   borderColor: COLORS.SECONDARY,
+  // },
+  transactionTypeButton: {
+    backgroundColor: COLORS.SECONDARY,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    width: "30%",
+  },
+
+  selectedTransactionTypeButton: {
+    backgroundColor: COLORS.ACCENT,
+  },
+
+  // buttonText: {
+  //   fontSize: 16,
+  //   color: COLORS.SECONDARY, // Default text color
+  // },
+
+  selectedButtonText: {
+    color: COLORS.WHITE, // Text color for selected button
+  },
+
   input: {
     height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
+    borderColor: COLORS.PRIMARY,
+    borderBottomWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
   },
@@ -290,68 +487,61 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  transactionTypeButton: {
-    backgroundColor: "blue",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    width: "30%",
-  },
+
   selectedButton: {
-    backgroundColor: "green",
+    backgroundColor: COLORS.ACCENT,
   },
   buttonText: {
-    color: "white",
+    color: COLORS.WHITE,
     fontSize: 16,
   },
   selectButton: {
-    backgroundColor: "blue",
+    backgroundColor: COLORS.SECONDARY,
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
   },
   toggleButton: {
-    backgroundColor: "blue",
+    backgroundColor: COLORS.SECONDARY,
     padding: 10,
+    width: "50%",
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
-    // width: "100%",
+    alignSelf: "center",
   },
   submitButton: {
-    backgroundColor: "blue",
+    backgroundColor: COLORS.SECONDARY,
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
+    width: "50%",
     marginTop: 20,
-  },
-  backButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
+    alignSelf: "center", // Align the button to the center horizontally
   },
   backButtonText: {
     fontSize: 16,
-    color: "blue",
+    color: COLORS.PRIMARY,
   },
   modalContainer: {
-    flex: 1,
     position: "absolute",
     top: 0,
     left: 0,
-    width: "100%",
-    height: "100%",
+    right: 0,
+    bottom: 0,
+    zIndex: 999, // Set a high z-index value
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
+
   modalContent: {
-    backgroundColor: "white",
+    backgroundColor: COLORS.WHITE,
     padding: 20,
     borderRadius: 10,
     width: "80%",
-    alignSelf: "center", // Center the modal horizontally
+    alignSelf: "center",
   },
   modalOption: {
     paddingVertical: 10,
@@ -360,6 +550,22 @@ const styles = StyleSheet.create({
   },
   modalOptionText: {
     fontSize: 16,
+  },
+  dateInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.PRIMARY,
+    marginBottom: 10,
+  },
+  dateInput: {
+    flex: 1,
+    height: 40,
+    paddingHorizontal: 10,
+    color: COLORS.BLACK,
+  },
+  calendarIcon: {
+    padding: 10,
   },
 });
 

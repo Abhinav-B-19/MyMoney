@@ -3,7 +3,6 @@ export const COLORS: { [key: string]: string } = {
   SECONDARY: "#1450A3",
   ACCENT: "#337CCF",
   WARNING: "#FFC436",
-  WHITE: "#FFFFF",
+  WHITE: "#FFFFFF",
   dark: "#000",
 };
-

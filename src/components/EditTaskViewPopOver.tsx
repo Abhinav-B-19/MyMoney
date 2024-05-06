@@ -80,9 +80,10 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
   };
 
   const handleEdit = () => {
-    console.log(props.id, props.userId);
     navigation.navigate("AddTransactionDetails", {
       initialFormData: {
+        userId: props.userId,
+        id: props.id,
         title: props.title,
         description: props.description,
         date: props.date,
@@ -91,27 +92,33 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
         currency: "\u20B9",
         account: props.account,
         category: props.category,
-        // isSplitTransaction: props.,
+        // isSplitTransaction: props.is
       },
     });
+    props.onClose();
   };
 
   return (
     <TouchableOpacity style={styles.touchable} testID="touchable">
       <View style={styles.item}>
-        <TouchableOpacity
-          onPress={props.onClose}
-          style={styles.closeButton}
-          testID="closeButton"
-        >
-          <Text style={styles.buttonText}>X</Text>
-        </TouchableOpacity>
         <View style={styles.itemContent}>
+          <TouchableOpacity
+            onPress={props.onClose}
+            style={styles.closeButton}
+            testID="closeButton"
+          >
+            <Text style={styles.buttonText}>X</Text>
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
+            <Text style={styles.itemText} numberOfLines={2} testID="taskTitle">
+              {props.title}
+            </Text>
+          </View>
           <View style={styles.iconContainer}>
             <View style={styles.iconButton}>
               <IconButton
                 icon="pencil"
-                size={20}
+                size={18} // Decreased icon size
                 onPress={handleEdit}
                 testID="editButton"
               />
@@ -119,16 +126,11 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
             <View style={styles.iconButton}>
               <IconButton
                 icon="trash-can"
-                size={20}
+                size={18} // Decreased icon size
                 onPress={handleDelete}
                 testID="deleteButton"
               />
             </View>
-          </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.itemText} numberOfLines={2} testID="taskTitle">
-              {props.title}
-            </Text>
           </View>
         </View>
         <ScrollView style={styles.expandedView}>
@@ -139,7 +141,6 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
             {props.transactionType === "income" ? "+" : "-"}{" "}
             {props.transactionAmount}
           </Text>
-
           <Text style={styles.additionalContent}>Account: {props.account}</Text>
           <Text style={styles.additionalContent}>
             Category: {props.category}
@@ -155,13 +156,12 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
 
 const styles = StyleSheet.create({
   touchable: {
-    width: "70%",
-    opacity: 1,
+    width: "90%",
   },
   item: {
-    backgroundColor: "#ffffff",
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    borderRadius: 15,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: {
@@ -173,46 +173,47 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   closeButton: {
-    position: "absolute",
-    top: 5,
-    left: 5,
-    backgroundColor: "#ffffff",
-    padding: 5,
-    borderRadius: 5,
+    backgroundColor: "#E6E6E6",
+    padding: 10,
+    borderRadius: 50,
   },
   buttonText: {
-    color: "#000000",
+    color: "#333333",
     fontWeight: "bold",
     fontSize: 16,
   },
   itemContent: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
   titleContainer: {
-    alignItems: "center",
-    marginBottom: 10,
+    flex: 1,
+    marginLeft: 40,
+    marginTop: 5, // Adjusted margin to push title slightly below
   },
   itemText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#333333",
   },
   iconContainer: {
     flexDirection: "row",
+    alignItems: "center",
   },
   iconButton: {
-    backgroundColor: "#ffffff",
+    // backgroundColor: "#E6E6E6",
+    padding: 10,
+    borderRadius: 10,
     marginLeft: 10,
   },
   expandedView: {
-    maxHeight: 200,
     marginTop: 10,
   },
   additionalContent: {
-    marginTop: 5,
-    fontSize: 14,
-    color: "#666666",
+    marginTop: 10,
+    fontSize: 16,
+    color: "#333333",
   },
 });
 

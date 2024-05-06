@@ -1,5 +1,11 @@
-import React, { useEffect, useState, useContext } from "react";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useState, useContext, useCallback } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native";
 import {
   isSameDay,
   isSameWeek,
@@ -20,6 +26,7 @@ import EditTaskViewPopOver, {
 } from "@/components/EditTaskViewPopOver";
 import { useAuth } from "@/context/AuthContext";
 import { useTotal } from "@/context/TotalContext";
+import { COLORS } from "@/constants/colors";
 
 const MoneyTrackerPage: React.FC = () => {
   const [selectedTracker, setSelectedTracker] =
@@ -27,6 +34,7 @@ const MoneyTrackerPage: React.FC = () => {
   const { selectedDate, handleDateChange } = useContext(DateContext);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const viewModeContext = useContext(ViewModeContext);
 
@@ -46,6 +54,27 @@ const MoneyTrackerPage: React.FC = () => {
   useEffect(() => {
     fetchDataIfNeeded();
   }, []);
+
+  const onRefresh = async () => {
+    setIsRefreshing(true); // Set refreshing state to true
+    console.log("Refreshing data...");
+
+    try {
+      // Call fetchTransData to refresh data
+      const response = await fetchTransData(authUser);
+      if (response.status === 200 || response.status === 201) {
+        setCollection(response.data);
+        setIsLoading(false);
+        console.log("Data refreshed successfully");
+      } else {
+        console.error("Failed to fetch transactions:", response.error);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+
+    setIsRefreshing(false); // Set refreshing state back to false
+  };
 
   const fetchDataIfNeeded = async () => {
     try {
@@ -67,13 +96,13 @@ const MoneyTrackerPage: React.FC = () => {
     let totalIncome = 0;
 
     filteredCollection.forEach((item) => {
+      const amount = parseFloat(item.transactionAmount); // Convert transactionAmount to a number
       if (item.transactionType === "debit") {
-        totalExpense += item.transactionAmount;
+        totalExpense += amount;
       } else if (item.transactionType === "credit") {
-        totalIncome += item.transactionAmount;
+        totalIncome += amount;
       }
     });
-
     setExpenseTotal(totalExpense);
     setIncomeTotal(totalIncome);
     setOverallTotal(totalIncome - totalExpense);
@@ -168,11 +197,16 @@ const MoneyTrackerPage: React.FC = () => {
     }
   };
 
-  const handleDeleteSuccess = () => {
+  // const handleDeleteSuccess = () => {
+  //   // Close the popover or perform any other action needed
+  //   fetchDataIfNeeded();
+  //   setSelectedTracker(null); // Reset selectedTracker to close the popover
+  // };
+  const handleDeleteSuccess = useCallback(() => {
     // Close the popover or perform any other action needed
-    fetchDataIfNeeded();
+    fetchDataIfNeeded(); // Consider refetching data if needed
     setSelectedTracker(null); // Reset selectedTracker to close the popover
-  };
+  }, [fetchDataIfNeeded]);
 
   // Get separated collection data
   const separatedCollection = separateCollectionByViewMode();
@@ -220,8 +254,27 @@ const MoneyTrackerPage: React.FC = () => {
             />
           </View>
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.PRIMARY]}
+          />
+        }
+        // onScroll={(event) => {
+        //   const offsetY = event.nativeEvent.contentOffset.y;
+
+        //   if (offsetY === 0) {
+        //     // FlatList is at the top of the screen
+        //     console.log("Pulling down");
+        //     // Call your onRefresh function here
+        //   } else {
+        //     // User is scrolling, but not at the top
+        //     console.log("Scrolling");
+        //   }
+        // }}
       />
-      {selectedTracker && (
+      {/* {selectedTracker && (
         <View style={styles.overlay}>
           <EditTaskViewPopOver
             {...selectedTracker}
@@ -229,6 +282,17 @@ const MoneyTrackerPage: React.FC = () => {
             onEdit={() => console.log("Edit button clicked")} // Log when edit button is clicked
             onDelete={() => console.log("Delete button clicked")}
             onDeleteSuccess={handleDeleteSuccess} // Log when delete button is clicked
+          />
+        </View>
+      )} */}
+      {selectedTracker && (
+        <View style={styles.overlay}>
+          <EditTaskViewPopOver
+            {...selectedTracker}
+            onClose={() => setSelectedTracker(null)} // Pass function to close the popover
+            onEdit={() => console.log("Edit button clicked")} // Log when edit button is clicked
+            onDelete={() => console.log("Delete button clicked")}
+            onDeleteSuccess={handleDeleteSuccess} // Pass the callback function directly
           />
         </View>
       )}
