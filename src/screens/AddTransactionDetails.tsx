@@ -384,7 +384,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           placeholder="Transaction Amount"
           onChangeText={(text) => handleChange("transactionAmount", text)}
         /> */}
-        <TextInput
+        {/* <TextInput
           style={styles.input}
           placeholder="Transaction Amount"
           onChangeText={(text) => handleChange("transactionAmount", text)}
@@ -396,7 +396,21 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           placeholder="Currency"
           onChangeText={(text) => handleChange("currency", text)}
           value={formData.currency}
-        />
+        /> */}
+        <View style={styles.currencyContainer}>
+          <TextInput
+            style={[styles.input, styles.currencyInput]}
+            placeholder="Currency"
+            onChangeText={(text) => handleChange("currency", text)}
+            value={formData.currency}
+          />
+          <TextInput
+            style={[styles.input, styles.amountInput]}
+            placeholder="Transaction Amount"
+            onChangeText={(text) => handleChange("transactionAmount", text)}
+            value={formData.transactionAmount.toString()}
+          />
+        </View>
       </View>
 
       {isSelectingVisible && (
@@ -616,6 +630,16 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: "gray",
+  },
+  currencyContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  currencyInput: {
+    width: "25%",
+  },
+  amountInput: {
+    width: "70%",
   },
 });
 
