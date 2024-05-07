@@ -105,7 +105,8 @@ const MoneyTrackerPage: React.FC = () => {
     });
     setExpenseTotal(totalExpense);
     setIncomeTotal(totalIncome);
-    setOverallTotal(totalIncome - totalExpense);
+    const total = totalIncome - totalExpense;
+    setOverallTotal(total);
   };
 
   const setApiData = async () => {

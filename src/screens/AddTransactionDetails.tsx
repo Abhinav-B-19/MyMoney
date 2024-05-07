@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import postNewData from "@/api/postNewData";
 import { COLORS } from "@/constants/colors";
@@ -45,6 +46,8 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const navigation = useNavigation();
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [submitDisabled, setSubmitDisabled] = useState(true);
+  const [isDataModified, setIsDataModified] = useState(false);
 
   const defaultFormData = {
     userId: authUser,
@@ -69,10 +72,29 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   //   console.log("Merged Form Data:", mergedInitialFormData);
   // }, []);
 
+  // useEffect(() => {
+  //   console.log("isDataPassed: ", isDataPassed);
+  //   console.log("mergedInitialFormData: ", mergedInitialFormData);
+  // }, [initialFormData]);
+
   useEffect(() => {
-    console.log("isDataPassed: ", isDataPassed);
-    console.log("mergedInitialFormData: ", mergedInitialFormData);
-  }, [initialFormData]);
+    // Check if transactionType, account, title, and amount are not empty
+    const { transactionType, account, title, transactionAmount } = formData;
+    const disabled = !(
+      transactionType &&
+      account &&
+      title &&
+      transactionAmount
+    );
+    setSubmitDisabled(disabled);
+  }, [formData]);
+
+  useEffect(() => {
+    // Check if the form data has been modified
+    const isModified =
+      JSON.stringify(formData) !== JSON.stringify(defaultFormData);
+    setIsDataModified(isModified);
+  }, [formData]);
 
   // useEffect(() => {
   //   console.log("Form Data Updated:", formData); // Log whenever formData changes
@@ -181,6 +203,24 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 
   const handleBack = () => {
     navigation.goBack();
+    // if (isDataModified) {
+    //   Alert.alert(
+    //     "Unsaved Changes",
+    //     "Do you want to discard the changes and go back?",
+    //     [
+    //       {
+    //         text: "No",
+    //         style: "cancel",
+    //       },
+    //       {
+    //         text: "Yes",
+    //         onPress: () => navigation.goBack(),
+    //       },
+    //     ]
+    //   );
+    // } else {
+    //   navigation.goBack();
+    // }
   };
 
   const handleCategorySelect = (category: string) => {
@@ -403,7 +443,14 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            submitDisabled && styles.disabledButton, // Apply styles for disabled button
+          ]}
+          onPress={submitDisabled ? null : handleSubmit}
+          disabled={submitDisabled}
+        >
           <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
       )}
@@ -566,6 +613,9 @@ const styles = StyleSheet.create({
   },
   calendarIcon: {
     padding: 10,
+  },
+  disabledButton: {
+    backgroundColor: "gray",
   },
 });
 

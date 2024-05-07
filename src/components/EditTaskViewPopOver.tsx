@@ -138,7 +138,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
             Transaction Type: {props.transactionType}
           </Text>
           <Text style={styles.additionalContent}>
-            {props.transactionType === "income" ? "+" : "-"}{" "}
+            {props.transactionType === "credit" ? "+" : "-"}{" "}
             {props.transactionAmount}
           </Text>
           <Text style={styles.additionalContent}>Account: {props.account}</Text>
