@@ -1,6 +1,13 @@
-import React, { useEffect } from "react";
-import { StyleSheet, View, Text, Image, TouchableOpacity } from "react-native";
-// Import the images statically
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons"; // Import the required icons
 import carIcon from "../../assets/Category/car.png";
 import entertainmentIcon from "../../assets/Category/entertainment.png";
 import fitnessIcon from "../../assets/Category/fitness.png";
@@ -9,31 +16,31 @@ import groceriesIcon from "../../assets/Category/groceries.png";
 import medicalIcon from "../../assets/Category/medical.png";
 import shoppingIcon from "../../assets/Category/shopping.png";
 import travelIcon from "../../assets/Category/travel.png";
+import updateTransactionData from "@/api/updateTransactionData";
 
 interface TaskViewProps {
-  text: string;
-  category: string;
-  description: string;
-  amount: number;
-  transactionType: string;
-  id: string;
   userId: string;
+  id: string;
   title: string;
+  description: string;
   date: string;
   transactionAmount: number;
   currency: string;
   account: string;
+  category: string;
+  transactionType: string;
   isSplitTransaction: boolean;
   onPress?: () => void;
 }
 
 const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
-  const amountColor = props.transactionType === "credit" ? "green" : "red";
-  // useEffect(() => {
-  //   console.log(props.title, props.category);
-  // }, [props.category]);
+  const [isSplitTransaction, setIsSplitTransaction] = useState<boolean>(
+    props.isSplitTransaction
+  );
 
-  // Map category names to their corresponding imported images
+  const amountColor =
+    props.transactionType === "credit" ? "#32CD32" : "#FF6347";
+
   const categoryImages = {
     food: foodIcon,
     groceries: groceriesIcon,
@@ -47,32 +54,80 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
     utilities: require("../../assets/Category/empty.png"),
   };
 
+  const handleToggleSplitTransaction = () => {
+    Alert.alert(
+      "Change Transaction Type",
+      "Are you sure you want to change the transaction type?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            setIsSplitTransaction(!isSplitTransaction);
+            const updatedFormData = {
+              id: props.id,
+              userId: props.userId,
+              title: props.title,
+              description: props.description,
+              date: props.date,
+              transactionAmount: props.transactionAmount,
+              transactionType: props.transactionType,
+              currency: props.currency,
+              account: props.account,
+              category: props.category,
+              isSplitTransaction: !isSplitTransaction,
+            };
+
+            const updateResponse = await updateTransactionData(
+              props.id,
+              updatedFormData
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.item}>
         <View style={styles.itemContent}>
           <View style={styles.circle}>
-            {/* Use the mapped image based on the category */}
             <Image
               source={categoryImages[props.category]}
               style={styles.image}
-              accessibilityLabel={props.category} // Set accessibilityLabel to the category
+              accessibilityLabel={props.category}
               defaultSource={require("../../assets/Category/empty.png")}
             />
-            {/* <Image
-              source={carIcon}
-              style={styles.image}
-              accessibilityLabel="car" // Set accessibilityLabel to the appropriate label
-              defaultSource={require("../../assets/Category/empty.png")}
-            /> */}
           </View>
-          <Text style={styles.itemText} numberOfLines={2}>
-            {props.text}
-          </Text>
-          <Text style={[styles.amountText, { color: amountColor }]}>
-            {props.transactionType === "debit" ? "-" : "+"}
-            {Math.abs(props.amount)}
-          </Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.itemText} numberOfLines={2}>
+              {props.title}
+            </Text>
+            <View style={styles.amountContainer}>
+              <Text style={styles.currency}>{props.currency}</Text>
+              <Text style={[styles.amountText, { color: amountColor }]}>
+                {props.transactionType === "debit" ? "-" : "+"}
+                {Math.abs(props.transactionAmount)}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleToggleSplitTransaction}
+          >
+            <View style={styles.iconBackground}>
+              {isSplitTransaction ? (
+                <FontAwesome name="group" size={20} color="#00008B" />
+              ) : (
+                <FontAwesome5 name="user" size={20} color="#00008B" />
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -88,23 +143,36 @@ const styles = StyleSheet.create({
     shadowColor: "gray",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 10,
+    position: "relative",
   },
   itemContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  itemText: {
-    width: "60%",
-    fontSize: 16,
+  textContainer: {
+    flex: 1,
     marginLeft: 10,
   },
-  expandedView: {
-    marginTop: 10,
+  itemText: {
+    fontSize: 16,
+    marginBottom: 5,
   },
-  additionalContent: {
+  amountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "absolute",
+    right: 15,
+  },
+  currency: {
     fontSize: 14,
+    marginRight: 10,
+    fontWeight: "bold",
     color: "#666",
+  },
+  amountText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
   circle: {
     width: 50,
@@ -113,16 +181,25 @@ const styles = StyleSheet.create({
     backgroundColor: "lightgray",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
   },
   image: {
     width: 50,
     height: 50,
     borderRadius: 25,
   },
-  amountText: {
-    fontSize: 16,
-    fontWeight: "bold",
+  iconButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -20 }, { translateY: -20 }], // Center the icon container
+  },
+  iconBackground: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#ADD8E6",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

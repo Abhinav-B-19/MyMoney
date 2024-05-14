@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { View, Text, Button } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 import AppNavigator from "./AppNavigator";
 import { Provider } from "react-redux";
@@ -7,19 +8,54 @@ import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/context/AuthContext";
 import { TotalProvider } from "@/context/TotalContext";
+import NetInfo from "@react-native-community/netinfo";
+import { checkFirstTimeOrLongTime } from "@/utils/utils";
+
 const App: React.FC = () => {
+  const [isConnected, setIsConnected] = useState(true);
+
+  useEffect(() => {
+    // Check network connectivity when the component mounts
+    checkInternetConnection();
+    checkFirstTimeOrLongTime();
+  }, []);
+
+  const checkInternetConnection = async () => {
+    const state = await NetInfo.fetch();
+    setIsConnected(state.isConnected);
+  };
+
+  const retryCheckConnection = () => {
+    checkInternetConnection();
+  };
+
+  if (!isConnected) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <NoInternetConnectionScreen onRetry={retryCheckConnection} />
+      </View>
+    );
+  }
+
   return (
     <AuthProvider>
       <TotalProvider>
         <Provider store={store}>
           <PaperProvider>
-            {/* <GestureHandlerRootView> */}
             <AppNavigator />
-            {/* </GestureHandlerRootView> */}
           </PaperProvider>
         </Provider>
       </TotalProvider>
     </AuthProvider>
+  );
+};
+
+const NoInternetConnectionScreen = ({ onRetry }) => {
+  return (
+    <View>
+      <Text>No Internet Connection</Text>
+      <Button title="Retry" onPress={onRetry} />
+    </View>
   );
 };
 

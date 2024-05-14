@@ -3,7 +3,7 @@ import { BASE_URL } from "@/constants/constants";
 const fetchTransData = async (userId) => {
   try {
     // Delay execution by 6 seconds
-    await new Promise((resolve) => setTimeout(resolve, 4000));
+    // await new Promise((resolve) => setTimeout(resolve, 4000));
 
     // Construct the URL dynamically
     const userUrl = `${BASE_URL}/transactions?userId=${userId}`;

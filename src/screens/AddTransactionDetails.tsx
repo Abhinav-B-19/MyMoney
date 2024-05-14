@@ -401,6 +401,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <TextInput
             style={[styles.input, styles.currencyInput]}
             placeholder="Currency"
+            editable={false}
             onChangeText={(text) => handleChange("currency", text)}
             value={formData.currency}
           />

@@ -2,6 +2,8 @@ import React, { useContext, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Navbar from "@/components/Navbar";
 import SecondNavbar from "@/components/SecondNavbar";
@@ -59,28 +61,6 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
           }}
         />
         <Tab.Screen
-          name="Categories"
-          component={Categories} //{AnimatedStyleUpdateExample} //{HomeScreen}
-          options={{
-            headerShown: false,
-            tabBarLabel: "Categories",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="home" color={color} size={size} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Accounts"
-          component={Accounts} //{HomeScreen}
-          options={{
-            headerShown: false,
-            tabBarLabel: "Accounts",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="home" color={color} size={size} />
-            ),
-          }}
-        />
-        <Tab.Screen
           name="Analysis"
           component={Analysis}
           options={{
@@ -98,11 +78,33 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
             headerShown: false,
             tabBarLabel: "Budgets",
             tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="account"
-                color={color}
+              <Ionicons name="calculator-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Accounts"
+          component={Accounts} //{HomeScreen}
+          options={{
+            headerShown: false,
+            tabBarLabel: "Accounts",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons
+                name="account-balance-wallet"
                 size={size}
+                color={color}
               />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Categories"
+          component={Categories} //{AnimatedStyleUpdateExample} //{HomeScreen}
+          options={{
+            headerShown: false,
+            tabBarLabel: "Categories",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="category" size={size} color={color} />
             ),
           }}
         />

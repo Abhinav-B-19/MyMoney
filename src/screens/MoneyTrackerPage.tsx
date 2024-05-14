@@ -27,6 +27,8 @@ import EditTaskViewPopOver, {
 import { useAuth } from "@/context/AuthContext";
 import { useTotal } from "@/context/TotalContext";
 import { COLORS } from "@/constants/colors";
+import moment from "moment";
+import NoTransactionPage from "@/components/NoTransactionPage";
 
 const MoneyTrackerPage: React.FC = () => {
   const [selectedTracker, setSelectedTracker] =
@@ -52,6 +54,7 @@ const MoneyTrackerPage: React.FC = () => {
   }, [authUser]);
 
   useEffect(() => {
+    console.log("fetchDataIfNeeded called");
     fetchDataIfNeeded();
   }, []);
 
@@ -174,17 +177,37 @@ const MoneyTrackerPage: React.FC = () => {
     }
     // console.log(filteredCollection);
     calculateTotals(filteredCollection);
-    const separatedCollection: { [key: string]: typeof collection } = {};
-    filteredCollection.forEach((item) => {
-      const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
-      if (separatedCollection[dateString]) {
-        separatedCollection[dateString].push(item);
-      } else {
-        separatedCollection[dateString] = [item];
-      }
-    });
+    // const separatedCollection: { [key: string]: typeof collection } = {};
+    // filteredCollection.forEach((item) => {
+    //   const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
+    //   if (separatedCollection[dateString]) {
+    //     separatedCollection[dateString].push(item);
+    //   } else {
+    //     separatedCollection[dateString] = [item];
+    //   }
+    // });
     // console.log("separatedCollection: ", separatedCollection);
-    return separatedCollection;
+    const groupedExpenses = getSortedExpenses(filteredCollection);
+    // console.log("groupedExpenses: ", groupedExpenses);
+    // return separatedCollection;
+    return groupedExpenses;
+  };
+
+  const getSortedExpenses = (filteredData: any[]) => {
+    const sortedExpenses = filteredData.sort((a, b) => {
+      return moment(b.date).diff(moment(a.date));
+    });
+
+    // Group expenses by date
+    const groupedExpenses: { [key: string]: any[] } = {};
+    sortedExpenses.forEach((expense) => {
+      const date = moment(expense.date).format("DD-MM-YYYY");
+      if (!groupedExpenses[date]) {
+        groupedExpenses[date] = [];
+      }
+      groupedExpenses[date].push(expense);
+    });
+    return groupedExpenses;
   };
 
   const handleTrackerPress = (userID: string, id: string) => {
@@ -220,26 +243,27 @@ const MoneyTrackerPage: React.FC = () => {
     );
   }
 
+  if (Object.keys(separatedCollection).length === 0) {
+    return <NoTransactionPage />;
+  }
+
   return (
     <>
       <FlatList
         style={styles.container}
         data={Object.entries(separatedCollection)}
-        keyExtractor={(item, index) => index.toString()} // Use the index as the key
+        keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.content}>
             <Text style={styles.dateHeader}>{item[0]}</Text>
             <FlatList
               data={item[1]}
-              keyExtractor={(item) => item.id} // Use a unique identifier as the key
+              keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TrackerView
-                  key={item.id} // Ensure userID is unique
-                  text={item.title}
+                  key={item.id}
                   category={item.category}
-                  description={`Description ${item.description}`}
-                  // imageUri={`../../assets/Category/${item.category}.png`}
-                  amount={item.transactionAmount}
+                  description={item.description}
                   transactionType={item.transactionType}
                   onPress={() => handleTrackerPress(item.userID, item.id)}
                   id={item.id}
@@ -290,7 +314,10 @@ const MoneyTrackerPage: React.FC = () => {
         <View style={styles.overlay}>
           <EditTaskViewPopOver
             {...selectedTracker}
-            onClose={() => setSelectedTracker(null)} // Pass function to close the popover
+            onClose={() => {
+              setSelectedTracker(null);
+              fetchDataIfNeeded();
+            }} // Pass function to close the popover
             onEdit={() => console.log("Edit button clicked")} // Log when edit button is clicked
             onDelete={() => console.log("Delete button clicked")}
             onDeleteSuccess={handleDeleteSuccess} // Pass the callback function directly
