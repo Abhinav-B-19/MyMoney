@@ -77,7 +77,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
         date: props.date,
         transactionAmount: props.transactionAmount,
         transactionType: props.transactionType,
-        currency: "\u20B9",
+        currency: props.currency,
         account: props.account,
         category: props.category,
         // isSplitTransaction: props.is
@@ -144,75 +144,72 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
   };
 
   return (
-    <TouchableOpacity style={styles.touchable} testID="touchable">
-      <View style={styles.item}>
-        <View style={styles.itemContent}>
-          <TouchableOpacity
-            onPress={() => {
-              // compareSplitTransaction();
-              props.onClose();
-            }}
-            style={styles.closeButton}
-            testID="closeButton"
-          >
-            <Text style={styles.buttonText}>X</Text>
-          </TouchableOpacity>
-          <View style={styles.titleContainer}>
-            <Text style={styles.itemText} numberOfLines={2} testID="taskTitle">
-              {props.title}
+    <View style={styles.item}>
+      <View style={styles.itemContent}>
+        <TouchableOpacity
+          onPress={() => {
+            // compareSplitTransaction();
+            props.onClose();
+          }}
+          style={styles.closeButton}
+          testID="closeButton"
+        >
+          <Text style={styles.buttonText}>X</Text>
+        </TouchableOpacity>
+        <View style={styles.titleContainer}>
+          <Text style={styles.itemText} numberOfLines={2} testID="taskTitle">
+            {props.title}
+          </Text>
+          <View style={styles.amountContainer}>
+            <Text style={[styles.currency, { fontWeight: "bold" }]}>
+              {props.currency}
             </Text>
-            <View style={styles.amountContainer}>
-              <Text style={[styles.currency, { fontWeight: "bold" }]}>
-                {props.currency}
-              </Text>
-              <Text
-                style={[
-                  styles.amountText,
-                  {
-                    color:
-                      props.transactionType === "debit" ? "#FF6347" : "#32CD32",
-                  },
-                ]}
-              >
-                {props.transactionType === "debit" ? "-" : "+"}
-                {Math.abs(props.transactionAmount)}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.iconContainer}>
-            <View style={styles.iconButton}>
-              <IconButton
-                icon="pencil"
-                size={18} // Decreased icon size
-                onPress={handleEdit}
-                testID="editButton"
-              />
-            </View>
-            <View style={styles.iconButton}>
-              <IconButton
-                icon="trash-can"
-                size={18} // Decreased icon size
-                onPress={handleDelete}
-                testID="deleteButton"
-              />
-            </View>
+            <Text
+              style={[
+                styles.amountText,
+                {
+                  color:
+                    props.transactionType === "debit" ? "#FF6347" : "#32CD32",
+                },
+              ]}
+            >
+              {props.transactionType === "debit" ? "-" : "+"}
+              {Math.abs(props.transactionAmount)}
+            </Text>
           </View>
         </View>
-        <ScrollView style={styles.expandedView}>
-          <Text style={styles.additionalContent}>
-            Transaction Type: {props.transactionType}
-          </Text>
-          <Text style={styles.additionalContent}>Account: {props.account}</Text>
-          <Text style={styles.additionalContent}>
-            Category: {props.category}
-          </Text>
-          <Text style={styles.additionalContent}>
-            Description: {props.description}
-          </Text>
-        </ScrollView>
+        <View style={styles.iconContainer}>
+          <View style={styles.iconButton}>
+            <IconButton
+              icon="pencil"
+              size={18} // Decreased icon size
+              onPress={handleEdit}
+              testID="editButton"
+            />
+          </View>
+          <View style={styles.iconButton}>
+            <IconButton
+              icon="trash-can"
+              size={18} // Decreased icon size
+              onPress={handleDelete}
+              testID="deleteButton"
+            />
+          </View>
+        </View>
+      </View>
+      <ScrollView style={styles.expandedView}>
+        <Text style={styles.additionalContent}>
+          Transaction Type: {props.transactionType}
+        </Text>
+        <Text style={styles.additionalContent}>Account: {props.account}</Text>
+        <Text style={styles.additionalContent}>Category: {props.category}</Text>
+        <Text style={styles.additionalContent}>
+          Description: {props.description}
+        </Text>
+      </ScrollView>
 
-        {/* Button indicating isSplitTransaction status */}
-        {/* <TouchableOpacity
+      {/* Button indicating isSplitTransaction status */}
+      {/* <TouchableOpacity
           style={[
             styles.splitTransactionButton,
             {
@@ -227,16 +224,13 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
             {isSplitTransaction ? "Split Transaction" : "Single Transaction"}
           </Text>
         </TouchableOpacity> */}
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  touchable: {
-    width: "90%",
-  },
   item: {
+    width: "90%",
     backgroundColor: "#FFFFFF",
     padding: 20,
     borderRadius: 15,
