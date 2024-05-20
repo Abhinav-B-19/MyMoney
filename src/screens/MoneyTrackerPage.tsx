@@ -58,12 +58,18 @@ const MoneyTrackerPage: React.FC = () => {
     fetchDataIfNeeded();
   }, []);
 
+  useEffect(() => {
+    const filteredCollection = separateCollectionByViewMode();
+    if (Array.isArray(filteredCollection)) {
+      calculateTotals(filteredCollection);
+    }
+  }, [collection, viewModeContext.viewMode, date]);
+
   const onRefresh = async () => {
-    setIsRefreshing(true); // Set refreshing state to true
+    setIsRefreshing(true);
     console.log("Refreshing data...");
 
     try {
-      // Call fetchTransData to refresh data
       const response = await fetchTransData(authUser);
       if (response.status === 200 || response.status === 201) {
         setCollection(response.data);
@@ -76,7 +82,7 @@ const MoneyTrackerPage: React.FC = () => {
       console.error("Error fetching transactions:", error);
     }
 
-    setIsRefreshing(false); // Set refreshing state back to false
+    setIsRefreshing(false);
   };
 
   const fetchDataIfNeeded = async () => {
@@ -99,7 +105,7 @@ const MoneyTrackerPage: React.FC = () => {
     let totalIncome = 0;
 
     filteredCollection.forEach((item) => {
-      const amount = parseFloat(item.transactionAmount); // Convert transactionAmount to a number
+      const amount = parseFloat(item.transactionAmount);
       if (item.transactionType === "debit") {
         totalExpense += amount;
       } else if (item.transactionType === "credit") {
@@ -112,20 +118,6 @@ const MoneyTrackerPage: React.FC = () => {
     setOverallTotal(total);
   };
 
-  const setApiData = async () => {
-    try {
-      const response = await fetchTransData("authUser");
-      if (response.status === 200 || response.status === 201) {
-        setCollection(response.data);
-        setIsLoading(false);
-      } else {
-        console.error("Failed to fetch transactions:", response.error);
-      }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    }
-  };
-
   const handleDateChangeAndUpdate = (newDate: Date) => {
     handleDateChange(newDate);
     setDate(newDate);
@@ -133,106 +125,63 @@ const MoneyTrackerPage: React.FC = () => {
 
   const handleFilterChange = (filter: string) => {
     console.log("Selected Filter in handleFilterChange:", filter);
-    // Handle the filter change here
   };
 
   const handleTotalDisplay = (filter: string) => {
     console.log("Selected Filter in handleFilterChange:", filter);
-    // Handle the filter change here
   };
 
   const separateCollectionByViewMode = () => {
     let filteredCollection = collection;
 
     switch (viewModeContext.viewMode) {
-      case "daily": //case ViewModeOptions.DAILY:
-        // console.log("in DAILY");
+      case "daily":
         filteredCollection = collection.filter((item) =>
           isSameDay(item.date, date)
         );
         break;
       case "weekly":
-        // console.log("in WEEKLY");
-        const startOfWeekDate = startOfWeek(date, { weekStartsOn: 0 }); // Adjust week start day if necessary
+        const startOfWeekDate = startOfWeek(date, { weekStartsOn: 0 });
         const endOfWeekDate = endOfWeek(date, { weekStartsOn: 0 });
-        // console.log("Start of Week:", format(startOfWeekDate, "MMM d"));
-        // console.log("End of Week:", format(endOfWeekDate, "MMM d"));
-
         filteredCollection = collection.filter((item) => {
-          const itemDate = new Date(item.date); // Convert item date to Date object
-          const isWithinWeek =
-            itemDate >= startOfWeekDate && itemDate <= endOfWeekDate;
-          // console.log(`Item Date: ${itemDate}, isWithinWeek: ${isWithinWeek}`);
-          return isWithinWeek;
+          const itemDate = new Date(item.date);
+          return itemDate >= startOfWeekDate && itemDate <= endOfWeekDate;
         });
-        // console.log("Filtered Collection:", filteredCollection);
         break;
-      case "monthly": //case ViewModeOptions.MONTHLY:
-        // console.log("in MONTHLY");
+      case "monthly":
         filteredCollection = collection.filter((item) =>
           isSameMonth(item.date, date)
         );
+        break;
       default:
         break;
     }
-    // console.log(filteredCollection);
-    calculateTotals(filteredCollection);
-    // const separatedCollection: { [key: string]: typeof collection } = {};
-    // filteredCollection.forEach((item) => {
-    //   const dateString = format(item.date, "MMM dd, yyyy"); // Format date as "Apr 30, 2024"
-    //   if (separatedCollection[dateString]) {
-    //     separatedCollection[dateString].push(item);
-    //   } else {
-    //     separatedCollection[dateString] = [item];
-    //   }
-    // });
-    // console.log("separatedCollection: ", separatedCollection);
-    const groupedExpenses = getSortedExpenses(filteredCollection);
-    // console.log("groupedExpenses: ", groupedExpenses);
-    // return separatedCollection;
-    return groupedExpenses;
+
+    return getFlatExpenses(filteredCollection);
   };
 
-  const getSortedExpenses = (filteredData: any[]) => {
+  const getFlatExpenses = (filteredData: any[]) => {
     const sortedExpenses = filteredData.sort((a, b) => {
       return moment(b.date).diff(moment(a.date));
     });
 
-    // Group expenses by date
-    const groupedExpenses: { [key: string]: any[] } = {};
-    sortedExpenses.forEach((expense) => {
-      const date = moment(expense.date).format("DD-MM-YYYY");
-      if (!groupedExpenses[date]) {
-        groupedExpenses[date] = [];
-      }
-      groupedExpenses[date].push(expense);
-    });
-    return groupedExpenses;
+    return sortedExpenses;
   };
 
   const handleTrackerPress = (userID: string, id: string) => {
-    // console.log("Clicked tracker:", userID, id); // Log to check the values
     const selected = collection.find(
       (item) => item.userID === userID && item.id === id
-    ); // Find the selected tracker item
-    // console.log("Selected tracker:", selected); // Log to check the selected tracker
+    );
     if (selected) {
-      setSelectedTracker(selected); // Set the selected tracker to open the EditTaskViewPopOver
+      setSelectedTracker(selected);
     }
   };
 
-  // const handleDeleteSuccess = () => {
-  //   // Close the popover or perform any other action needed
-  //   fetchDataIfNeeded();
-  //   setSelectedTracker(null); // Reset selectedTracker to close the popover
-  // };
   const handleDeleteSuccess = useCallback(() => {
-    // Close the popover or perform any other action needed
-    fetchDataIfNeeded(); // Consider refetching data if needed
-    setSelectedTracker(null); // Reset selectedTracker to close the popover
-  }, [fetchDataIfNeeded]);
+    fetchDataIfNeeded();
+    setSelectedTracker(null);
+  }, []);
 
-  // Get separated collection data
   const separatedCollection = separateCollectionByViewMode();
 
   if (isLoading) {
@@ -243,15 +192,18 @@ const MoneyTrackerPage: React.FC = () => {
     );
   }
 
-  if (Object.keys(separatedCollection).length === 0) {
+  if (separatedCollection.length === 0) {
     return <NoTransactionPage />;
   }
+
+  const groupedExpenses = separateCollectionByDate(separatedCollection);
 
   return (
     <>
       <FlatList
         style={styles.container}
-        data={Object.entries(separatedCollection)}
+        contentContainerStyle={{ paddingBottom: 50 }}
+        data={Object.entries(groupedExpenses)}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.content}>
@@ -286,30 +238,7 @@ const MoneyTrackerPage: React.FC = () => {
             colors={[COLORS.PRIMARY]}
           />
         }
-        // onScroll={(event) => {
-        //   const offsetY = event.nativeEvent.contentOffset.y;
-
-        //   if (offsetY === 0) {
-        //     // FlatList is at the top of the screen
-        //     console.log("Pulling down");
-        //     // Call your onRefresh function here
-        //   } else {
-        //     // User is scrolling, but not at the top
-        //     console.log("Scrolling");
-        //   }
-        // }}
       />
-      {/* {selectedTracker && (
-        <View style={styles.overlay}>
-          <EditTaskViewPopOver
-            {...selectedTracker}
-            onClose={() => setSelectedTracker(null)} // Pass function to close the popover
-            onEdit={() => console.log("Edit button clicked")} // Log when edit button is clicked
-            onDelete={() => console.log("Delete button clicked")}
-            onDeleteSuccess={handleDeleteSuccess} // Log when delete button is clicked
-          />
-        </View>
-      )} */}
       {selectedTracker && (
         <View style={styles.overlay}>
           <EditTaskViewPopOver
@@ -317,15 +246,27 @@ const MoneyTrackerPage: React.FC = () => {
             onClose={() => {
               setSelectedTracker(null);
               fetchDataIfNeeded();
-            }} // Pass function to close the popover
-            onEdit={() => console.log("Edit button clicked")} // Log when edit button is clicked
+            }}
+            onEdit={() => console.log("Edit button clicked")}
             onDelete={() => console.log("Delete button clicked")}
-            onDeleteSuccess={handleDeleteSuccess} // Pass the callback function directly
+            onDeleteSuccess={handleDeleteSuccess}
           />
         </View>
       )}
     </>
   );
+};
+
+const separateCollectionByDate = (collection) => {
+  const groupedExpenses = {};
+  collection.forEach((expense) => {
+    const date = moment(expense.date).format("DD-MM-YYYY");
+    if (!groupedExpenses[date]) {
+      groupedExpenses[date] = [];
+    }
+    groupedExpenses[date].push(expense);
+  });
+  return groupedExpenses;
 };
 
 const styles = StyleSheet.create({
@@ -336,7 +277,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    // backgroundColor: "red",
   },
   loadingIndicator: {
     marginTop: 20,
@@ -377,5 +317,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
 export default MoneyTrackerPage;

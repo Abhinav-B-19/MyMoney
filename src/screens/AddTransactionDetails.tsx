@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import updateTransactionData from "@/api/updateTransactionData";
+import Calculator from "@/components/Calculator";
 
 interface TransactionDetailsProps {
   initialFormData?: {
@@ -46,6 +47,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const [isSelectingVisible, setIsSelectingVisible] = useState(false);
   const navigation = useNavigation();
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [isDataModified, setIsDataModified] = useState(false);
@@ -55,6 +57,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     title: "",
     description: "",
     date: new Date().toISOString(),
+    time: new Date(), // Set current time as a string
     transactionAmount: "",
     transactionType: "debit",
     currency: "\u20B9",
@@ -86,14 +89,14 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   }, [formData]);
 
   const [categories, setCategories] = useState<string[]>([
-    "car",
-    "fitness",
-    "entertainment",
-    "food",
-    "groceries",
-    "medical",
-    "shopping",
-    "travel",
+    "Car",
+    "Fitness",
+    "Entertainment",
+    "Food",
+    "Groceries",
+    "Medical",
+    "Shopping",
+    "Travel",
   ]);
   const [accounts, setAccounts] = useState<string[]>([
     "DEBIT CARD",
@@ -110,9 +113,26 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     setDatePickerVisibility(false);
   };
 
-  const handleConfirm = (date) => {
+  const showTimePicker = () => {
+    setTimePickerVisibility(true);
+  };
+
+  const hideTimePicker = () => {
+    setTimePickerVisibility(false);
+  };
+
+  const handleDateConfirm = (date) => {
     handleChange("date", date);
     hideDatePicker();
+  };
+
+  const handleTimeConfirm = (time) => {
+    const formattedTime = time.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    handleChange("time", formattedTime);
+    hideTimePicker();
   };
 
   const handleChange = (name: string, value: string | number | Date) => {
@@ -169,11 +189,13 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   };
 
   const handleCategorySelect = (category: string) => {
+    Keyboard.dismiss();
     setFormData({ ...formData, category });
     setIsSelectingVisible(false);
   };
 
   const handleAccountSelect = (account: string) => {
+    Keyboard.dismiss(); // Dismiss the keyboard
     setFormData({ ...formData, account });
     setIsSelectingVisible(false);
   };
@@ -189,7 +211,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     });
   };
 
-  const currencies = ["₹", "$", "€", "£", "¥"]; // Add any other currencies you need
+  const currencies = ["₹", "$", "€", "£", "¥"];
 
   const handleCurrencySelect = (currency: string) => {
     setFormData({ ...formData, currency });
@@ -197,9 +219,18 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   };
 
   const handleOutsidePress = () => {
+    Keyboard.dismiss();
     if (isSelectingVisible) {
       setIsSelectingVisible(false);
     }
+  };
+
+  const formatTime = (timeString: string) => {
+    const currentDate = new Date(timeString); // Convert the string to a Date object
+    return currentDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -214,6 +245,19 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
             />
           </TouchableOpacity>
           <Text style={styles.title}>Add Transaction Details</Text>
+          <TouchableOpacity
+            style={[styles.button, submitDisabled && styles.disabledButton]}
+            onPress={isDataPassed ? handleSave : handleSubmit}
+            disabled={submitDisabled}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.selectedButtonText}>
+                {isDataPassed ? "Save" : "Submit"}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
         <View style={styles.form}>
           <View style={styles.transactionTypeContainer}>
@@ -272,7 +316,6 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               </Text>
             </TouchableOpacity>
           </View>
-
           <View style={styles.selectContainer}>
             <TouchableOpacity
               style={styles.selectButton}
@@ -297,64 +340,20 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               </Text>
             </TouchableOpacity>
           </View>
-
           <TextInput
             style={styles.input}
             placeholder="Title"
             onChangeText={(text) => handleChange("title", text)}
             value={formData.title}
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           <TextInput
             style={styles.input}
             placeholder="Description"
             onChangeText={(text) => handleChange("description", text)}
             value={formData.description}
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
-          <TouchableOpacity
-            style={styles.datePickerButton}
-            onPress={showDatePicker}
-          >
-            <Text style={styles.datePickerButtonText}>
-              {formatDate(formData.date)}
-            </Text>
-          </TouchableOpacity>
-          <DateTimePickerModal
-            isVisible={isDatePickerVisible}
-            mode="date"
-            onConfirm={handleConfirm}
-            onCancel={hideDatePicker}
-          />
-          <View style={styles.amountContainer}>
-            <TouchableOpacity
-              style={styles.currencySelector}
-              onPress={() => {
-                setSelectingField("currency");
-                setIsSelectingVisible(true);
-              }}
-            >
-              <Text style={styles.currencySelectorText}>
-                {formData.currency}
-              </Text>
-            </TouchableOpacity>
-            <TextInput
-              style={styles.amountInput}
-              placeholder="Amount"
-              keyboardType="numeric"
-              onChangeText={(text) => handleChange("transactionAmount", text)}
-              value={formData.transactionAmount}
-            />
-          </View>
-
-          {/* <TouchableOpacity
-            style={styles.splitTransactionToggle}
-            onPress={handleToggleSplitTransaction}
-          >
-            <Text style={styles.splitTransactionToggleText}>
-              {formData.isSplitTransaction
-                ? "Split Transaction: Yes"
-                : "Split Transaction: No"}
-            </Text>
-          </TouchableOpacity> */}
           <View style={styles.splitTransactionContainer}>
             <Text style={styles.label}>Split Transaction:</Text>
             <TouchableOpacity
@@ -375,33 +374,60 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               </Text>
             </TouchableOpacity>
           </View>
+          <View style={styles.amountContainer}>
+            <TouchableOpacity
+              style={styles.currencySelector}
+              onPress={() => {
+                setSelectingField("currency");
+                setIsSelectingVisible(true);
+              }}
+            >
+              <Text style={styles.currencySelectorText}>
+                {formData.currency}
+              </Text>
+            </TouchableOpacity>
+            <TextInput
+              style={styles.amountInput}
+              placeholder="Amount"
+              keyboardType="numeric"
+              onChangeText={(text) => handleChange("transactionAmount", text)}
+              value={formData.transactionAmount}
+              onSubmitEditing={() => Keyboard.dismiss()}
+            />
+          </View>
 
-          {isDataPassed && (
+          <Calculator onKeyPress={(key) => console.log("Pressed:", key)} />
+
+          <View style={styles.dateAndTimeContainer}>
             <TouchableOpacity
-              style={[styles.button, submitDisabled && styles.disabledButton]}
-              onPress={handleSave}
-              disabled={submitDisabled}
+              style={styles.datePickerButton}
+              onPress={showDatePicker}
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.selectedButtonText}>Save</Text>
-              )}
+              <Text style={styles.datePickerButtonText}>
+                {formatDate(formData.date)}
+              </Text>
             </TouchableOpacity>
-          )}
-          {!isDataPassed && (
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={handleDateConfirm}
+              onCancel={hideDatePicker}
+            />
             <TouchableOpacity
-              style={[styles.button, submitDisabled && styles.disabledButton]}
-              onPress={handleSubmit}
-              disabled={submitDisabled}
+              style={styles.datePickerButton}
+              onPress={showTimePicker}
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.selectedButtonText}>Submit</Text>
-              )}
+              <Text style={styles.datePickerButtonText}>
+                {formatTime(formData.time)}
+              </Text>
             </TouchableOpacity>
-          )}
+            <DateTimePickerModal
+              isVisible={isTimePickerVisible}
+              mode="time"
+              onConfirm={handleTimeConfirm}
+              onCancel={hideTimePicker}
+            />
+          </View>
         </View>
 
         {isSelectingVisible && (
@@ -456,12 +482,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     paddingTop: 20,
+    justifyContent: "space-between", // Align items horizontally
   },
   backButton: {
     marginRight: 10,
   },
   title: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "bold",
     color: COLORS.PRIMARY,
   },
@@ -497,6 +524,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
+  dateAndTimeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    marginBottom: 20,
+    padding: 5,
+  },
+
   selectButton: {
     flex: 1,
     paddingVertical: 10,
@@ -516,10 +550,12 @@ const styles = StyleSheet.create({
   datePickerButton: {
     paddingVertical: 10,
     borderWidth: 1,
+    width: "50%",
     borderColor: COLORS.PRIMARY,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 20, // Add margin bottom
+    marginRight: 10, // Add margin right for spacing
   },
   datePickerButtonText: {
     fontSize: 16,
@@ -549,18 +585,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
   },
-  splitTransactionToggle: {
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: COLORS.PRIMARY,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  splitTransactionToggleText: {
-    fontSize: 16,
-    color: COLORS.PRIMARY,
-  },
   splitTransactionContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -585,10 +609,21 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   button: {
-    paddingVertical: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 10, // Added horizontal padding
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: 5,
+    borderRadius: 25, // Increased border radius for a rounder button
     alignItems: "center",
+    justifyContent: "center",
+    // Shadow properties for a subtle shadow effect
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5, // Elevation for Android shadow effect
   },
   disabledButton: {
     backgroundColor: "#ccc",
