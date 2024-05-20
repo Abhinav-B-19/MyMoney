@@ -193,7 +193,7 @@ const MoneyTrackerPage: React.FC = () => {
   }
 
   if (separatedCollection.length === 0) {
-    return <NoTransactionPage />;
+    return <NoTransactionPage onRefresh={onRefresh} />;
   }
 
   const groupedExpenses = separateCollectionByDate(separatedCollection);

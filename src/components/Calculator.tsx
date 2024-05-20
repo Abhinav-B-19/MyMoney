@@ -7,9 +7,9 @@ const Calculator = ({ onNumberPress, onOperatorPress, onEqualPress }) => {
       <View style={styles.row}>
         <TouchableOpacity
           style={[styles.button, styles.operator]}
-          onPress={() => onOperatorPress("+")}
+          onPress={() => onOperatorPress("/")}
         >
-          <Text style={[styles.buttonText, styles.operatorText]}>+</Text>
+          <Text style={[styles.buttonText, styles.operatorText]}>/</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
@@ -33,9 +33,9 @@ const Calculator = ({ onNumberPress, onOperatorPress, onEqualPress }) => {
       <View style={styles.row}>
         <TouchableOpacity
           style={[styles.button, styles.operator]}
-          onPress={() => onOperatorPress("-")}
+          onPress={() => onOperatorPress("*")}
         >
-          <Text style={[styles.buttonText, styles.operatorText]}>-</Text>
+          <Text style={[styles.buttonText, styles.operatorText]}>*</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
@@ -59,9 +59,9 @@ const Calculator = ({ onNumberPress, onOperatorPress, onEqualPress }) => {
       <View style={styles.row}>
         <TouchableOpacity
           style={[styles.button, styles.operator]}
-          onPress={() => onOperatorPress("*")}
+          onPress={() => onOperatorPress("-")}
         >
-          <Text style={[styles.buttonText, styles.operatorText]}>*</Text>
+          <Text style={[styles.buttonText, styles.operatorText]}>-</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
@@ -85,9 +85,9 @@ const Calculator = ({ onNumberPress, onOperatorPress, onEqualPress }) => {
       <View style={styles.row}>
         <TouchableOpacity
           style={[styles.button, styles.operator]}
-          onPress={() => onOperatorPress("/")}
+          onPress={() => onOperatorPress("+")}
         >
-          <Text style={[styles.buttonText, styles.operatorText]}>/</Text>
+          <Text style={[styles.buttonText, styles.operatorText]}>+</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}

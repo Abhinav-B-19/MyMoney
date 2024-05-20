@@ -80,7 +80,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
         currency: props.currency,
         account: props.account,
         category: props.category,
-        // isSplitTransaction: props.is
+        isSplitTransaction: props.isSplitTransaction,
       },
     });
     props.onClose();
