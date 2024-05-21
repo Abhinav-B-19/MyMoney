@@ -29,6 +29,7 @@ import { useTotal } from "@/context/TotalContext";
 import { COLORS } from "@/constants/colors";
 import moment from "moment";
 import NoTransactionPage from "@/components/NoTransactionPage";
+import { useFocusEffect } from "@react-navigation/native";
 
 const MoneyTrackerPage: React.FC = () => {
   const [selectedTracker, setSelectedTracker] =
@@ -53,10 +54,15 @@ const MoneyTrackerPage: React.FC = () => {
     console.log("setAuthUser: ", authUser);
   }, [authUser]);
 
-  useEffect(() => {
-    console.log("fetchDataIfNeeded called");
-    fetchDataIfNeeded();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Screen is focused");
+      fetchDataApi();
+      return () => {
+        console.log("Screen is unfocused");
+      };
+    }, [])
+  );
 
   useEffect(() => {
     const filteredCollection = separateCollectionByViewMode();
@@ -85,7 +91,7 @@ const MoneyTrackerPage: React.FC = () => {
     setIsRefreshing(false);
   };
 
-  const fetchDataIfNeeded = async () => {
+  const fetchDataApi = async () => {
     try {
       const response = await fetchTransData(authUser);
       if (response.status === 200 || response.status === 201) {
@@ -137,7 +143,7 @@ const MoneyTrackerPage: React.FC = () => {
     switch (viewModeContext.viewMode) {
       case "daily":
         filteredCollection = collection.filter((item) =>
-          isSameDay(item.date, date)
+          isSameDay(new Date(item.date), date)
         );
         break;
       case "weekly":
@@ -150,7 +156,7 @@ const MoneyTrackerPage: React.FC = () => {
         break;
       case "monthly":
         filteredCollection = collection.filter((item) =>
-          isSameMonth(item.date, date)
+          isSameMonth(new Date(item.date), date)
         );
         break;
       default:
@@ -178,7 +184,7 @@ const MoneyTrackerPage: React.FC = () => {
   };
 
   const handleDeleteSuccess = useCallback(() => {
-    fetchDataIfNeeded();
+    fetchDataApi();
     setSelectedTracker(null);
   }, []);
 
@@ -245,7 +251,7 @@ const MoneyTrackerPage: React.FC = () => {
             {...selectedTracker}
             onClose={() => {
               setSelectedTracker(null);
-              fetchDataIfNeeded();
+              fetchDataApi();
             }}
             onEdit={() => console.log("Edit button clicked")}
             onDelete={() => console.log("Delete button clicked")}

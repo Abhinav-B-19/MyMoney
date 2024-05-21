@@ -1,4 +1,6 @@
-import React, { useContext, useEffect } from "react";
+// In MyTabs component
+
+import React, { useContext, useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -14,6 +16,7 @@ import Analysis from "./Tabs/Analysis";
 import Budgets from "./Tabs/Budgets";
 import DateContext from "../context/DateContext";
 import { COLORS } from "@/constants/colors";
+import { useIsFocused } from "@react-navigation/native";
 
 type RootTabParamList = {
   Records: undefined;
@@ -31,10 +34,8 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   const { selectedDate, handleDateChange } = useContext(DateContext);
-
-  // useEffect(() => {
-  //   console.log("authUser in MyTabs: ", authUser);
-  // }, [authUser]);
+  const [isCategoriesScreenFocused, setIsCategoriesScreenFocused] =
+    useState(false);
 
   const navigateToAddTransactionDetails = () => {
     navigation.navigate("AddTransactionDetails"); // Navigate to AddTransactionDetails screen
@@ -43,11 +44,13 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Navbar title="Money Tracker" />
-      <SecondNavbar
-        topSectionText="Top Section"
-        bottomSectionText="Bottom Section"
-        onDateChange={handleDateChange}
-      />
+      {!isCategoriesScreenFocused && (
+        <SecondNavbar
+          topSectionText="Top Section"
+          bottomSectionText="Bottom Section"
+          onDateChange={handleDateChange}
+        />
+      )}
       <Tab.Navigator>
         <Tab.Screen
           name="Records"
@@ -84,7 +87,7 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
         />
         <Tab.Screen
           name="Accounts"
-          component={Accounts} //{HomeScreen}
+          component={Accounts}
           options={{
             headerShown: false,
             tabBarLabel: "Accounts",
@@ -99,7 +102,6 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
         />
         <Tab.Screen
           name="Categories"
-          component={Categories} //{AnimatedStyleUpdateExample} //{HomeScreen}
           options={{
             headerShown: false,
             tabBarLabel: "Categories",
@@ -107,9 +109,14 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
               <MaterialIcons name="category" size={size} color={color} />
             ),
           }}
-        />
+        >
+          {() => (
+            <Categories
+              setIsCategoriesScreenFocused={setIsCategoriesScreenFocused}
+            />
+          )}
+        </Tab.Screen>
       </Tab.Navigator>
-      {/* </DateContext.Provider> */}
       <TouchableOpacity
         style={styles.plusIconContainer}
         onPress={navigateToAddTransactionDetails}

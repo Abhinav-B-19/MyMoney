@@ -52,12 +52,18 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [isDataModified, setIsDataModified] = useState(false);
 
+  const [calculatorInput, setCalculatorInput] = useState(
+    mergedInitialFormData.transactionAmount || ""
+  );
+
+  const [operationInput, setoperationInput] = useState("");
+
   const defaultFormData = {
     userId: authUser,
     title: "",
     description: "",
     date: new Date().toISOString(),
-    time: new Date(), // Set current time as a string
+    time: new Date(),
     transactionAmount: "",
     transactionType: "debit",
     currency: "\u20B9",
@@ -100,9 +106,9 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   ]);
   const [accounts, setAccounts] = useState<string[]>([
     "DEBIT CARD",
+    "CREDIT CARD",
+    "SAVINGS",
     "CASH",
-    "SBI",
-    "AXIS",
   ]);
 
   const showDatePicker = () => {
@@ -126,17 +132,23 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     hideDatePicker();
   };
 
+  // const handleTimeConfirm = (time) => {
+  //   const formatedDate = new Date(time);
+  //   const formattedTime = formatedDate.toLocaleTimeString([], {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   });
+  //   handleChange("time", formattedTime);
+  //   hideTimePicker();
+  // };
   const handleTimeConfirm = (time) => {
-    const formattedTime = time.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    handleChange("time", formattedTime);
+    const formattedTime = new Date(time); //formatTime(time);
+    handleChange("time", formattedTime); // Update form state with the Date object
     hideTimePicker();
   };
 
   const handleChange = (name: string, value: string | number | Date) => {
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
   };
 
   const formatDate = (dateString: string) => {
@@ -226,11 +238,39 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   };
 
   const formatTime = (timeString: string) => {
-    const currentDate = new Date(timeString); // Convert the string to a Date object
-    return currentDate.toLocaleTimeString([], {
+    const currentDate = new Date(timeString);
+    const currentTime = currentDate.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
+    return currentTime;
+  };
+
+  const handleNumberPress = (number: string) => {
+    setCalculatorInput((prevInput) => prevInput + number);
+    handleChange("transactionAmount", calculatorInput + number);
+  };
+
+  const handleOperatorPress = (operator: string) => {
+    // Update the calculator input with the operator
+    setCalculatorInput((prevInput) => prevInput + operator);
+    handleChange("transactionAmount", calculatorInput + operator);
+    setoperationInput(operator);
+  };
+
+  const handleEqualPress = () => {
+    try {
+      const result = eval(calculatorInput);
+      setCalculatorInput(result.toString());
+      handleChange("transactionAmount", result.toString());
+    } catch (error) {
+      console.error("Invalid expression", error);
+    }
+  };
+
+  const handleDeleteLast = () => {
+    setCalculatorInput((prevInput) => prevInput.slice(0, -1));
+    handleChange("transactionAmount", calculatorInput.slice(0, -1));
   };
 
   return (
@@ -325,7 +365,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               }}
             >
               <Text style={styles.buttonText}>
-                {formData.category || "Select Category"}
+                {(formData.category || "Select Category").toUpperCase()}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -336,7 +376,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               }}
             >
               <Text style={styles.buttonText}>
-                {formData.account || "Select Account"}
+                {(formData.account || "Select Account").toUpperCase()}
               </Text>
             </TouchableOpacity>
           </View>
@@ -386,24 +426,42 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
                 {formData.currency}
               </Text>
             </TouchableOpacity>
-            <TextInput
-              style={styles.amountInput}
-              placeholder="Amount"
-              keyboardType="numeric"
-              onChangeText={(text) => handleChange("transactionAmount", text)}
-              value={formData.transactionAmount}
-              onSubmitEditing={() => Keyboard.dismiss()}
-            />
+            <View style={styles.amountInputContainer}>
+              {/* <Text style={styles.operationContainer}>{operationInput}</Text> */}
+              <TextInput
+                style={[styles.amountInput, { color: "black" }]} // Add custom color style
+                placeholder="Amount"
+                keyboardType="numeric"
+                onChangeText={(text) => handleChange("transactionAmount", text)}
+                value={formData.transactionAmount}
+                onSubmitEditing={() => Keyboard.dismiss()}
+                editable={false}
+              />
+              <TouchableOpacity
+                onPress={handleDeleteLast}
+                style={styles.deleteButton}
+              >
+                <MaterialCommunityIcons
+                  name="backspace-outline"
+                  size={24}
+                  color={COLORS.PRIMARY}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <Calculator onKeyPress={(key) => console.log("Pressed:", key)} />
+          <Calculator
+            onNumberPress={handleNumberPress}
+            onOperatorPress={handleOperatorPress}
+            onEqualPress={handleEqualPress}
+          />
 
           <View style={styles.dateAndTimeContainer}>
             <TouchableOpacity
-              style={styles.datePickerButton}
+              style={styles.pickerButton}
               onPress={showDatePicker}
             >
-              <Text style={styles.datePickerButtonText}>
+              <Text style={styles.pickerButtonText}>
                 {formatDate(formData.date)}
               </Text>
             </TouchableOpacity>
@@ -414,11 +472,11 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               onCancel={hideDatePicker}
             />
             <TouchableOpacity
-              style={styles.datePickerButton}
+              style={styles.pickerButton}
               onPress={showTimePicker}
             >
-              <Text style={styles.datePickerButtonText}>
-                {formatTime(formData.time)}
+              <Text style={styles.pickerButtonText}>
+                {formatTime(formData.time)} {/* Use the 'time' state value */}
               </Text>
             </TouchableOpacity>
             <DateTimePickerModal
@@ -482,7 +540,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     paddingTop: 20,
-    justifyContent: "space-between", // Align items horizontally
+    justifyContent: "space-between",
   },
   backButton: {
     marginRight: 10,
@@ -547,24 +605,24 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
   },
-  datePickerButton: {
+  pickerButton: {
     paddingVertical: 10,
     borderWidth: 1,
     width: "50%",
     borderColor: COLORS.PRIMARY,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 20, // Add margin bottom
-    marginRight: 10, // Add margin right for spacing
+    marginBottom: 20,
+    marginRight: 10,
   },
-  datePickerButtonText: {
+  pickerButtonText: {
     fontSize: 16,
     color: COLORS.PRIMARY,
   },
   amountContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   currencySelector: {
     borderWidth: 1,
@@ -578,13 +636,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.PRIMARY,
   },
-  amountInput: {
-    flex: 1,
+  amountInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    // backgroundColor: "red",
+    marginRight: 50,
     borderWidth: 1,
     borderColor: COLORS.PRIMARY,
     borderRadius: 5,
-    padding: 10,
   },
+  operationContainer: {
+    // backgroundColor: "white",
+    textAlign: "center",
+    paddingLeft: 5,
+    fontSize: 20,
+    overflow: "hidden",
+    color: "gray",
+  },
+  amountInput: {
+    flex: 1,
+    padding: 10,
+    marginRight: 50,
+    fontSize: 25,
+    overflow: "scroll",
+    // backgroundColor: "yellow",
+  },
+  deleteButton: {
+    position: "absolute",
+    right: 10,
+  },
+
   splitTransactionContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -610,12 +691,11 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 8,
-    paddingHorizontal: 10, // Added horizontal padding
+    paddingHorizontal: 10,
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: 25, // Increased border radius for a rounder button
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
-    // Shadow properties for a subtle shadow effect
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -623,7 +703,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5, // Elevation for Android shadow effect
+    elevation: 5,
   },
   disabledButton: {
     backgroundColor: "#ccc",
