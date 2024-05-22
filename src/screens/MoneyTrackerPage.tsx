@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import TrackerView from "@/components/TaskView";
 import DateContext from "../context/DateContext";
 import ViewModeContext from "@/context/ViewModeContext";
-import fetchTransData from "@/api/fetchTransData";
+import fetchDataApi from "@/api/fetchDataApi";
 import TaskActivityIndicator from "@/components/TaskActivityIndicator";
 import EditTaskViewPopOver, {
   EditTaskViewPopOverProps,
@@ -57,7 +57,7 @@ const MoneyTrackerPage: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       console.log("Screen is focused");
-      fetchDataApi();
+      fetchingDataApi();
       return () => {
         console.log("Screen is unfocused");
       };
@@ -76,14 +76,7 @@ const MoneyTrackerPage: React.FC = () => {
     console.log("Refreshing data...");
 
     try {
-      const response = await fetchTransData(authUser);
-      if (response.status === 200 || response.status === 201) {
-        setCollection(response.data);
-        setIsLoading(false);
-        console.log("Data refreshed successfully");
-      } else {
-        console.error("Failed to fetch transactions:", response.error);
-      }
+      fetchingDataApi();
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
@@ -91,9 +84,9 @@ const MoneyTrackerPage: React.FC = () => {
     setIsRefreshing(false);
   };
 
-  const fetchDataApi = async () => {
+  const fetchingDataApi = async () => {
     try {
-      const response = await fetchTransData(authUser);
+      const response = await fetchDataApi("transactions", authUser);
       if (response.status === 200 || response.status === 201) {
         setCollection(response.data);
         setIsLoading(false);
@@ -184,7 +177,7 @@ const MoneyTrackerPage: React.FC = () => {
   };
 
   const handleDeleteSuccess = useCallback(() => {
-    fetchDataApi();
+    fetchingDataApi();
     setSelectedTracker(null);
   }, []);
 
@@ -251,7 +244,7 @@ const MoneyTrackerPage: React.FC = () => {
             {...selectedTracker}
             onClose={() => {
               setSelectedTracker(null);
-              fetchDataApi();
+              fetchingDataApi();
             }}
             onEdit={() => console.log("Edit button clicked")}
             onDelete={() => console.log("Delete button clicked")}

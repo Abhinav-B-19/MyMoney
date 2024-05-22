@@ -1,12 +1,12 @@
 import { BASE_URL } from "@/constants/constants";
 
-const fetchTransData = async (userId) => {
+const fetchDataApi = async (endPoint, userId) => {
   try {
     // Delay execution by 6 seconds
     // await new Promise((resolve) => setTimeout(resolve, 4000));
 
     // Construct the URL dynamically
-    const userUrl = `${BASE_URL}/transactions?userId=${userId}`;
+    const userUrl = `${BASE_URL}/${endPoint}?userId=${userId}`;
     console.log(userUrl);
     // Fetch user data from the endpoint
     const userDataRes = await fetch(userUrl);
@@ -30,4 +30,4 @@ const fetchTransData = async (userId) => {
   }
 };
 
-export default fetchTransData;
+export default fetchDataApi;
