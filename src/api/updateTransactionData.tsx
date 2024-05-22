@@ -1,8 +1,8 @@
 import { BASE_URL } from "@/constants/constants";
 
-const updateTransactionData = async (transactionId, updatedData) => {
+const updateTransactionData = async (endPoint, transactionId, updatedData) => {
   try {
-    const transactionUrl = `${BASE_URL}/transactions/${transactionId}`;
+    const transactionUrl = `${BASE_URL}/${endPoint}/${transactionId}`;
     console.log(transactionUrl);
 
     const requestOptions = {

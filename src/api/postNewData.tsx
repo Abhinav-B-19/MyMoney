@@ -1,9 +1,9 @@
 import { BASE_URL } from "@/constants/constants";
 
-const postNewData = async (newData) => {
+const postNewData = async (endPoint, newData) => {
   try {
     // Construct the URL for posting data
-    const postUrl = `${BASE_URL}/transactions`;
+    const postUrl = `${BASE_URL}/${endPoint}`;
 
     // Make a POST request to the endpoint
     const response = await fetch(postUrl, {

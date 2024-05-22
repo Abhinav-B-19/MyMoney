@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/constants/constants";
 
-const deleteTransData = async (userId, transactionId) => {
+const deleteTransData = async (endPoint, userId, transactionId) => {
   console.log(userId, transactionId);
   try {
     // Construct the URL dynamically
@@ -12,7 +12,7 @@ const deleteTransData = async (userId, transactionId) => {
     //   console.log('No transaction found');
     //   return
     // } else
-    const deleteUrl = `${BASE_URL}/transactions/${transactionId}`;
+    const deleteUrl = `${BASE_URL}/${endPoint}/${transactionId}`;
     console.log(deleteUrl);
     const deleteResponse = await fetch(deleteUrl, {
       method: "DELETE",
