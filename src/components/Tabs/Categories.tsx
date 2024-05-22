@@ -17,47 +17,36 @@ import CategoryViewItem from "../CategoryViewItem";
 import fetchDataApi from "@/api/fetchDataApi";
 import { useAuth } from "@/context/AuthContext";
 import TaskActivityIndicator from "../TaskActivityIndicator";
-
+import postNewData from "@/api/postNewData";
+import updateTransactionData from "@/api/updateTransactionData";
+updateTransactionData;
 interface Category {
-  type: string;
+  id: string;
+  transactionType: string;
   name: string;
   icon: string;
 }
 
 interface CategoriesProps {
   setIsCategoriesScreenFocused: React.Dispatch<React.SetStateAction<boolean>>;
+  onDeleteSuccess: () => void;
 }
 
 const Categories: React.FC<CategoriesProps> = ({
   setIsCategoriesScreenFocused,
+  onDeleteSuccess,
 }) => {
   const { authUser, setAuthUser } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-
-  const fetchingDataApi = async () => {
-    try {
-      const response = await fetchDataApi("categories", authUser);
-      if (response.status === 200 || response.status === 201) {
-        console.log(response.data);
-        setIsLoading(false);
-        setCategories(response.data);
-      } else {
-        console.error("Failed to fetch transactions:", response.error);
-      }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    }
-  };
-
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedCategoryId, setEditedCategoryId] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-
   const [modalVisible, setModalVisible] = useState(false);
   const [newCategory, setNewCategory] = useState<Category>({
-    type: "Income",
+    transactionType: "Income",
     name: "",
     icon: "attach-money",
   });
-
   const icons = [
     "attach-money",
     "money-off",
@@ -70,7 +59,7 @@ const Categories: React.FC<CategoriesProps> = ({
     useCallback(() => {
       console.log("Categories is focused");
       setIsCategoriesScreenFocused(true);
-      console.log("categories:", categories);
+      // console.log("categories:", categories);
 
       return () => {
         console.log("Categories is unfocused");
@@ -83,15 +72,98 @@ const Categories: React.FC<CategoriesProps> = ({
     fetchingDataApi();
   }, []);
 
+  const fetchingDataApi = async () => {
+    try {
+      const response = await fetchDataApi("categories", authUser);
+      if (response.status === 200 || response.status === 201) {
+        console.log(response.data);
+        setIsLoading(false);
+        setCategories(response.data);
+      } else {
+        console.error("Failed to fetch categories:", response.error);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   const handleAddCategory = () => {
     console.log("Add button pressed");
     setModalVisible(true);
   };
 
-  const handleSaveCategory = () => {
-    setCategories([...categories, newCategory]);
-    console.log(newCategory);
+  const handleSaveCategory = async () => {
+    if (!newCategory.name || !newCategory.icon) {
+      alert("Please fill in all fields.");
+      return;
+    }
+    setIsLoading(true);
+    const updatedCategory = { ...newCategory, userId: authUser };
+    console.log(updatedCategory);
+    try {
+      await postNewData("categories", updatedCategory);
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+    // setCategories([...categories, updatedCategory]);
     setModalVisible(false);
+    setNewCategory({
+      transactionType: "Income",
+      name: "",
+      icon: "attach-money",
+    });
+  };
+
+  const handleDeleteSuccess = () => {
+    fetchingDataApi(); // Refresh category list after deletion
+    // onDeleteSuccess(); // Notify parent component about successful deletion
+  };
+
+  const handleEditCategory = (categoryId: string) => {
+    const editedCategory = categories.find(
+      (category) => category.id === categoryId
+    );
+
+    if (editedCategory) {
+      setNewCategory(editedCategory);
+      setIsEditMode(true); // Set edit mode to true
+      setModalVisible(true);
+      setEditedCategoryId(categoryId); // Store the id of the edited category
+    } else {
+      console.log("Category not found");
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!newCategory.name || !newCategory.icon) {
+      alert("Please fill in all fields.");
+      return;
+    }
+    setIsLoading(true);
+    const updatedCategory = { ...newCategory, userId: authUser };
+    console.log(updatedCategory);
+    try {
+      if (editedCategoryId) {
+        await updateTransactionData(
+          "categories",
+          editedCategoryId,
+          updatedCategory
+        ); // Use editedCategoryId
+      }
+    } catch (error) {
+      console.error("Error updating data:", error);
+    } finally {
+      setIsLoading(false);
+      fetchingDataApi();
+    }
+    setModalVisible(false);
+    setNewCategory({
+      transactionType: "Income",
+      name: "",
+      icon: "attach-money",
+    });
   };
 
   if (isLoading) {
@@ -110,7 +182,14 @@ const Categories: React.FC<CategoriesProps> = ({
           {categories
             .filter((category) => category.transactionType === "Income")
             .map((category) => (
-              <CategoryViewItem key={category.id} category={category} />
+              <CategoryViewItem
+                key={category.id}
+                category={category}
+                userId={authUser}
+                iconName={category.icon}
+                onDeleteSuccess={handleDeleteSuccess}
+                onEditPress={handleEditCategory}
+              />
             ))}
         </View>
         <View style={styles.categorySection}>
@@ -118,7 +197,14 @@ const Categories: React.FC<CategoriesProps> = ({
           {categories
             .filter((category) => category.transactionType === "Expense")
             .map((category) => (
-              <CategoryViewItem key={category.id} category={category} />
+              <CategoryViewItem
+                key={category.id}
+                category={category}
+                userId={authUser}
+                iconName={category.icon}
+                onDeleteSuccess={handleDeleteSuccess}
+                onEditPress={handleEditCategory}
+              />
             ))}
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddCategory}>
@@ -152,7 +238,7 @@ const Categories: React.FC<CategoriesProps> = ({
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Add New Category</Text>
                   <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Type:</Text>
+                    <Text style={styles.inputLabel}>transactionType:</Text>
                     <View style={styles.buttonGroup}>
                       <TouchableOpacity
                         style={[
@@ -243,12 +329,23 @@ const Categories: React.FC<CategoriesProps> = ({
                     >
                       <Text style={styles.textStyle}>Cancel</Text>
                     </Pressable>
-                    <Pressable
-                      style={[styles.button, styles.buttonSave]}
-                      onPress={handleSaveCategory}
-                    >
-                      <Text style={styles.textStyle}>Save</Text>
-                    </Pressable>
+                    {isEditMode ? (
+                      <Pressable
+                        style={[styles.button, styles.buttonUpdate]} // Add a new style for update button
+                        onPress={handleUpdateCategory} // Call handleUpdateCategory when update button is pressed
+                      >
+                        <Text style={styles.textStyle}>Update</Text>
+                        {/* Change button text to Update */}
+                      </Pressable>
+                    ) : (
+                      <Pressable
+                        style={[styles.button, styles.buttonSave]} // Use buttonSave style for Save button
+                        onPress={handleSaveCategory}
+                      >
+                        <Text style={styles.textStyle}>Save</Text>
+                        {/* Button text remains Save for new category */}
+                      </Pressable>
+                    )}
                   </View>
                 </View>
               </Pressable>
@@ -421,6 +518,9 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  buttonUpdate: {
+    backgroundColor: "green",
   },
 });
 

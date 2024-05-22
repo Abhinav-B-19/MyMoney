@@ -83,6 +83,7 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
             };
 
             const updateResponse = await updateTransactionData(
+              "transactions",
               props.id,
               updatedFormData
             );

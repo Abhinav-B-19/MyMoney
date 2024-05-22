@@ -169,7 +169,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     const updatedFormData = { ...formData, transactionType };
 
     try {
-      await postNewData(updatedFormData);
+      await postNewData("transactions", updatedFormData);
       handleBack();
     } catch (error) {
       console.error("Error posting data:", error);
@@ -187,7 +187,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
       const updatedFormData = { ...formData, transactionType };
       const id = updatedFormData.id;
 
-      await updateTransactionData(id, updatedFormData);
+      await updateTransactionData("transactions", id, updatedFormData);
       handleBack();
     } catch (error) {
       console.error("Error saving data:", error);

@@ -1,4 +1,6 @@
-import React, { useState, useRef } from "react";
+// CategoryViewItem.tsx
+
+import React from "react";
 import {
   View,
   Text,
@@ -8,33 +10,69 @@ import {
   Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import deleteTransData from "@/api/deleteTransData";
 
 interface Category {
-  type: string;
+  id: string;
+  transactionType: string;
   name: string;
   icon: string;
 }
 
 interface CategoryViewItemProps {
   category: Category;
+  userId: string;
+  iconName: string;
+  onDeleteSuccess: () => void;
+  onEditPress: (categoryId: string) => void;
 }
 
-const CategoryViewItem: React.FC<CategoryViewItemProps> = ({ category }) => {
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  const [dropdownWidth, setDropdownWidth] = useState(0);
-  const dropdownRef = useRef<View>(null);
+const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
+  category,
+  userId,
+  iconName,
+  onDeleteSuccess,
+  onEditPress,
+}) => {
+  const { id, name } = category;
+
+  const [isDropdownVisible, setIsDropdownVisible] = React.useState(false);
+  const [popupPosition, setPopupPosition] = React.useState({ x: 0, y: 0 });
+  const [dropdownWidth, setDropdownWidth] = React.useState(0);
+  const dropdownRef = React.useRef<View>(null);
 
   const handleOpenDropdown = (event: any) => {
-    console.log("Dropdown opened");
+    const { pageX, pageY } = event.nativeEvent;
     setIsDropdownVisible(true);
     setPopupPosition({
-      x: event.nativeEvent.pageX,
-      y: event.nativeEvent.pageY,
+      x: event.nativeEvent.pageX + 35,
+      y: event.nativeEvent.pageY - 15,
     });
   };
 
   const handleCloseDropdown = () => {
+    setIsDropdownVisible(false);
+  };
+
+  const handleEditDropdown = () => {
+    setIsDropdownVisible(false);
+    onEditPress(id);
+  };
+
+  const handleDeleteDropdown = async () => {
+    setIsDropdownVisible(false);
+    const response = await deleteTransData("categories", userId, id);
+    if (response && response.status === 200) {
+      onDeleteSuccess();
+    } else {
+      console.error(
+        "Failed to delete task:",
+        response ? response.error : "Unknown error"
+      );
+    }
+  };
+
+  const handleIgnoreDropdown = () => {
     setIsDropdownVisible(false);
   };
 
@@ -49,8 +87,8 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({ category }) => {
   return (
     <View style={styles.categoryItem}>
       <View style={styles.leftSection}>
-        <MaterialIcons name={category.icon} size={24} color="black" />
-        <Text style={styles.categoryText}>{category.name}</Text>
+        <MaterialIcons name={iconName} size={24} color="black" />
+        <Text style={styles.categoryText}>{name}</Text>
       </View>
       <TouchableOpacity onPress={handleOpenDropdown}>
         <MaterialIcons name="more-horiz" size={24} color="black" />
@@ -74,8 +112,7 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({ category }) => {
             <Pressable
               style={styles.dropdownItem}
               onPress={() => {
-                console.log("Edit");
-                handleCloseDropdown();
+                handleEditDropdown();
               }}
             >
               <Text>Edit</Text>
@@ -84,14 +121,14 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({ category }) => {
               style={styles.dropdownItem}
               onPress={() => {
                 console.log("Delete");
-                handleCloseDropdown();
+                handleDeleteDropdown();
               }}
             >
               <Text>Delete</Text>
             </Pressable>
             <Pressable
               style={styles.dropdownItem}
-              onPress={handleCloseDropdown}
+              onPress={handleIgnoreDropdown}
             >
               <Text>Ignore</Text>
             </Pressable>
@@ -113,6 +150,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     marginBottom: 8,
+    backgroundColor: "white",
   },
   leftSection: {
     flexDirection: "row",
@@ -123,7 +161,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    // backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     alignContent: "center",
@@ -133,6 +170,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     position: "absolute",
+    borderWidth: 1.5,
+    borderColor: "#ccc",
   },
   dropdownItem: {
     padding: 10,

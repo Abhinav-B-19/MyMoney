@@ -50,7 +50,11 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
         {
           text: "Yes",
           onPress: async () => {
-            const response = await deleteTransData(props.userId, props.id);
+            const response = await deleteTransData(
+              "transactions",
+              props.userId,
+              props.id
+            );
             if (response && response.status === 200) {
               console.log("Task deleted successfully.");
               props.onDeleteSuccess(); // Call the callback
@@ -128,6 +132,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
 
                 // Update the transaction data via API
                 const updateResponse = await updateTransactionData(
+                  "transactions",
                   props.id,
                   updatedFormData
                 );
