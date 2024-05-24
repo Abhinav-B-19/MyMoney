@@ -8,6 +8,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/context/AuthContext";
 import { TotalProvider } from "@/context/TotalContext";
+import { CategoryProvider } from "@/context/CategoryContext";
 import NetInfo from "@react-native-community/netinfo";
 import { checkFirstTimeOrLongTime } from "@/utils/utils";
 
@@ -39,13 +40,15 @@ const App: React.FC = () => {
 
   return (
     <AuthProvider>
-      <TotalProvider>
-        <Provider store={store}>
-          <PaperProvider>
-            <AppNavigator />
-          </PaperProvider>
-        </Provider>
-      </TotalProvider>
+      <CategoryProvider>
+        <TotalProvider>
+          <Provider store={store}>
+            <PaperProvider>
+              <AppNavigator />
+            </PaperProvider>
+          </Provider>
+        </TotalProvider>
+      </CategoryProvider>
     </AuthProvider>
   );
 };
