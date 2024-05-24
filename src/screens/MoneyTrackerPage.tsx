@@ -105,9 +105,9 @@ const MoneyTrackerPage: React.FC = () => {
 
     filteredCollection.forEach((item) => {
       const amount = parseFloat(item.transactionAmount);
-      if (item.transactionType === "debit") {
+      if (item.transactionType === "Expense") {
         totalExpense += amount;
-      } else if (item.transactionType === "credit") {
+      } else if (item.transactionType === "Income") {
         totalIncome += amount;
       }
     });

@@ -166,19 +166,16 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
             {props.title}
           </Text>
           <View style={styles.amountContainer}>
-            <Text style={[styles.currency, { fontWeight: "bold" }]}>
-              {props.currency}
-            </Text>
             <Text
               style={[
                 styles.amountText,
                 {
                   color:
-                    props.transactionType === "debit" ? "#FF6347" : "#32CD32",
+                    props.transactionType === "Expense" ? "#FF6347" : "#32CD32",
                 },
               ]}
             >
-              {props.transactionType === "debit" ? "-" : "+"}
+              {props.transactionType === "Expense" ? "-" : "+"} {props.currency}
               {Math.abs(props.transactionAmount)}
             </Text>
           </View>
@@ -204,7 +201,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
       </View>
       <ScrollView style={styles.expandedView}>
         <Text style={styles.additionalContent}>
-          Transaction Type: {props.transactionType}
+          Transaction Type: {props.transactionType.toUpperCase()}
         </Text>
         <Text style={styles.additionalContent}>Account: {props.account}</Text>
         <Text style={styles.additionalContent}>Category: {props.category}</Text>
@@ -277,11 +274,6 @@ const styles = StyleSheet.create({
   amountContainer: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  currency: {
-    fontSize: 14,
-    marginRight: 10, // Increased marginRight for more space
-    color: "#666",
   },
   amountText: {
     fontSize: 16,

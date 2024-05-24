@@ -20,6 +20,7 @@ import TaskActivityIndicator from "../TaskActivityIndicator";
 import postNewData from "@/api/postNewData";
 import updateTransactionData from "@/api/updateTransactionData";
 updateTransactionData;
+import { useCategory } from "@/context/CategoryContext";
 interface Category {
   id: string;
   transactionType: string;
@@ -40,19 +41,20 @@ const Categories: React.FC<CategoriesProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedCategoryId, setEditedCategoryId] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newCategory, setNewCategory] = useState<Category>({
     transactionType: "Income",
     name: "",
     icon: "attach-money",
   });
+  const { contextCategories, setContextCategories } = useCategory();
   const icons = [
     "attach-money",
     "money-off",
     "euro-symbol",
     "account-balance-wallet",
-    "credit-card",
+    "Income-card",
   ];
 
   useFocusEffect(
@@ -65,7 +67,7 @@ const Categories: React.FC<CategoriesProps> = ({
         console.log("Categories is unfocused");
         setIsCategoriesScreenFocused(false);
       };
-    }, [categories])
+    }, [contextCategories])
   );
 
   useEffect(() => {
@@ -76,9 +78,10 @@ const Categories: React.FC<CategoriesProps> = ({
     try {
       const response = await fetchDataApi("categories", authUser);
       if (response.status === 200 || response.status === 201) {
-        console.log(response.data);
+        // console.log(response.data);
         setIsLoading(false);
-        setCategories(response.data);
+        // setCategories(response.data);
+        setContextCategories(response.data);
       } else {
         console.error("Failed to fetch categories:", response.error);
       }
@@ -97,17 +100,32 @@ const Categories: React.FC<CategoriesProps> = ({
       alert("Please fill in all fields.");
       return;
     }
+
+    // Check if a category with the same type and name already exists
+    const categoryExists = contextCategories.some(
+      (category) =>
+        category.transactionType === newCategory.transactionType &&
+        category.name.toLowerCase() === newCategory.name.toLowerCase()
+    );
+
+    if (categoryExists) {
+      alert("Category already exists.");
+      return;
+    }
+
     setIsLoading(true);
     const updatedCategory = { ...newCategory, userId: authUser };
     console.log(updatedCategory);
     try {
       await postNewData("categories", updatedCategory);
+      // Refresh categories list after adding a new category
+      fetchingDataApi();
     } catch (error) {
       console.error("Error posting data:", error);
     } finally {
       setIsLoading(false);
     }
-    // setCategories([...categories, updatedCategory]);
+
     setModalVisible(false);
     setNewCategory({
       transactionType: "Income",
@@ -122,7 +140,7 @@ const Categories: React.FC<CategoriesProps> = ({
   };
 
   const handleEditCategory = (categoryId: string) => {
-    const editedCategory = categories.find(
+    const editedCategory = contextCategories.find(
       (category) => category.id === categoryId
     );
 
@@ -179,7 +197,7 @@ const Categories: React.FC<CategoriesProps> = ({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.categorySection}>
           <Text style={styles.sectionHeader}>Income Categories</Text>
-          {categories
+          {contextCategories
             .filter((category) => category.transactionType === "Income")
             .map((category) => (
               <CategoryViewItem
@@ -194,7 +212,7 @@ const Categories: React.FC<CategoriesProps> = ({
         </View>
         <View style={styles.categorySection}>
           <Text style={styles.sectionHeader}>Expense Categories</Text>
-          {categories
+          {contextCategories
             .filter((category) => category.transactionType === "Expense")
             .map((category) => (
               <CategoryViewItem

@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import updateTransactionData from "@/api/updateTransactionData";
 import Calculator from "@/components/Calculator";
+import { useCategory } from "@/context/CategoryContext";
 
 interface TransactionDetailsProps {
   initialFormData?: {
@@ -55,6 +56,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const [calculatorInput, setCalculatorInput] = useState(
     mergedInitialFormData.transactionAmount || ""
   );
+  const [filteredCategories, setFilteredCategories] = useState([]);
 
   const [operationInput, setoperationInput] = useState("");
 
@@ -65,7 +67,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     date: new Date().toISOString(),
     time: new Date(),
     transactionAmount: "",
-    transactionType: "debit",
+    transactionType: "Expense",
     currency: "\u20B9",
     account: "",
     category: "",
@@ -92,18 +94,16 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     const isModified =
       JSON.stringify(formData) !== JSON.stringify(defaultFormData);
     setIsDataModified(isModified);
+
+    // Filter categories based on the selected transaction type
+    const categoriesByType = contextCategories.filter(
+      (category) => category.transactionType === formData.transactionType
+    );
+    setFilteredCategories(categoriesByType);
   }, [formData]);
 
-  const [categories, setCategories] = useState<string[]>([
-    "Car",
-    "Fitness",
-    "Entertainment",
-    "Food",
-    "Groceries",
-    "Medical",
-    "Shopping",
-    "Travel",
-  ]);
+  const { contextCategories, setContextCategories } = useCategory();
+
   const [accounts, setAccounts] = useState<string[]>([
     "DEBIT CARD",
     "CREDIT CARD",
@@ -132,15 +132,6 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     hideDatePicker();
   };
 
-  // const handleTimeConfirm = (time) => {
-  //   const formatedDate = new Date(time);
-  //   const formattedTime = formatedDate.toLocaleTimeString([], {
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //   });
-  //   handleChange("time", formattedTime);
-  //   hideTimePicker();
-  // };
   const handleTimeConfirm = (time) => {
     const formattedTime = new Date(time); //formatTime(time);
     handleChange("time", formattedTime); // Update form state with the Date object
@@ -161,10 +152,10 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     setIsLoading(true);
     const transactionType =
-      formData.transactionType === "credit" ? "credit" : "debit";
+      formData.transactionType === "Income" ? "Income" : "Expense";
 
     const updatedFormData = { ...formData, transactionType };
 
@@ -178,11 +169,11 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     }
   };
 
-  const handleSave = async () => {
+  const handleUpdate = async () => {
     setIsLoading(true);
     try {
       const transactionType =
-        formData.transactionType === "credit" ? "credit" : "debit";
+        formData.transactionType === "Income" ? "Income" : "Expense";
 
       const updatedFormData = { ...formData, transactionType };
       const id = updatedFormData.id;
@@ -287,14 +278,14 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <Text style={styles.title}>Add Transaction Details</Text>
           <TouchableOpacity
             style={[styles.button, submitDisabled && styles.disabledButton]}
-            onPress={isDataPassed ? handleSave : handleSubmit}
+            onPress={isDataPassed ? handleUpdate : handleSave}
             disabled={submitDisabled}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.selectedButtonText}>
-                {isDataPassed ? "Save" : "Submit"}
+                {isDataPassed ? "UPDATE" : "SAVE"}
               </Text>
             )}
           </TouchableOpacity>
@@ -304,15 +295,15 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
             <TouchableOpacity
               style={[
                 styles.transactionTypeButton,
-                formData.transactionType === "credit" &&
+                formData.transactionType === "Income" &&
                   styles.selectedTransactionTypeButton,
               ]}
-              onPress={() => handleTransactionTypeSelect("credit")}
+              onPress={() => handleTransactionTypeSelect("Income")}
             >
               <Text
                 style={[
                   styles.buttonText,
-                  formData.transactionType === "credit" &&
+                  formData.transactionType === "Income" &&
                     styles.selectedButtonText,
                 ]}
               >
@@ -322,15 +313,15 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
             <TouchableOpacity
               style={[
                 styles.transactionTypeButton,
-                formData.transactionType === "debit" &&
+                formData.transactionType === "Expense" &&
                   styles.selectedTransactionTypeButton,
               ]}
-              onPress={() => handleTransactionTypeSelect("debit")}
+              onPress={() => handleTransactionTypeSelect("Expense")}
             >
               <Text
                 style={[
                   styles.buttonText,
-                  formData.transactionType === "debit" &&
+                  formData.transactionType === "Expense" &&
                     styles.selectedButtonText,
                 ]}
               >
@@ -492,13 +483,16 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <TouchableWithoutFeedback onPress={handleOutsidePress}>
             <View style={styles.selectionModal}>
               {selectingField === "category" &&
-                categories.map((category) => (
+                filteredCategories.map((category) => (
                   <TouchableOpacity
-                    key={category}
+                    key={category.id} // Assuming 'id' is a unique identifier for each category
                     style={styles.selectableItem}
-                    onPress={() => handleCategorySelect(category)}
+                    onPress={() => handleCategorySelect(category.name)} // Assuming 'name' is the category name
                   >
-                    <Text style={styles.selectableItemText}>{category}</Text>
+                    <Text style={styles.selectableItemText}>
+                      {category.name}
+                    </Text>
+                    {/* Assuming 'name' is the category name */}
                   </TouchableOpacity>
                 ))}
               {selectingField === "account" &&

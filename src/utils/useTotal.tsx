@@ -10,9 +10,9 @@ const useTotal = (collection: any[]) => {
     let totalIncome = 0;
 
     collection.forEach((item) => {
-      if (item.transactionType === "debit") {
+      if (item.transactionType === "Expense") {
         totalExpense += item.transactionAmount;
-      } else if (item.transactionType === "credit") {
+      } else if (item.transactionType === "Income") {
         totalIncome += item.transactionAmount;
       }
     });

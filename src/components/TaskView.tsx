@@ -16,6 +16,7 @@ import groceriesIcon from "../../assets/Category/groceries.png";
 import medicalIcon from "../../assets/Category/medical.png";
 import shoppingIcon from "../../assets/Category/shopping.png";
 import travelIcon from "../../assets/Category/travel.png";
+import emptyIcon from "../../assets/Category/empty.png";
 import updateTransactionData from "@/api/updateTransactionData";
 
 interface TaskViewProps {
@@ -38,9 +39,6 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
     props.isSplitTransaction
   );
 
-  const amountColor =
-    props.transactionType === "credit" ? "#32CD32" : "#FF6347";
-
   const categoryImages = {
     food: foodIcon,
     groceries: groceriesIcon,
@@ -50,8 +48,6 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
     fitness: fitnessIcon,
     medical: medicalIcon,
     shopping: shoppingIcon,
-    room: require("../../assets/Category/empty.png"),
-    utilities: require("../../assets/Category/empty.png"),
   };
 
   const handleToggleSplitTransaction = () => {
@@ -99,10 +95,9 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
         <View style={styles.itemContent}>
           <View style={styles.circle}>
             <Image
-              source={categoryImages[props.category]}
+              source={categoryImages[props.category] || emptyIcon}
               style={styles.image}
               accessibilityLabel={props.category}
-              defaultSource={require("../../assets/Category/empty.png")}
             />
           </View>
           <View style={styles.textContainer}>
@@ -110,10 +105,19 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
               {props.title}
             </Text>
             <View style={styles.amountContainer}>
-              <Text style={styles.currency}>{props.currency}</Text>
-              <Text style={[styles.amountText, { color: amountColor }]}>
-                {props.transactionType === "debit" ? "-" : "+"}
-                {Math.abs(props.transactionAmount)}
+              <Text
+                style={[
+                  styles.amountText,
+                  {
+                    color:
+                      props.transactionType === "Expense"
+                        ? "#FF6347"
+                        : "#32CD32",
+                  },
+                ]}
+              >
+                {props.transactionType === "Expense" ? "-" : "+"}{" "}
+                {props.currency} {Math.abs(props.transactionAmount)}
               </Text>
             </View>
           </View>

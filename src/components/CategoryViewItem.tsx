@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Pressable,
   Modal,
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import deleteTransData from "@/api/deleteTransData";
@@ -59,17 +60,36 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
     onEditPress(id);
   };
 
-  const handleDeleteDropdown = async () => {
+  const handleDeleteDropdown = () => {
     setIsDropdownVisible(false);
-    const response = await deleteTransData("categories", userId, id);
-    if (response && response.status === 200) {
-      onDeleteSuccess();
-    } else {
-      console.error(
-        "Failed to delete task:",
-        response ? response.error : "Unknown error"
-      );
-    }
+    // Show confirmation alert
+    Alert.alert(
+      "Delete Category",
+      "Are you sure you want to delete this category?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            // Perform delete action
+            const response = await deleteTransData("categories", userId, id);
+            if (response && response.status === 200) {
+              onDeleteSuccess();
+            } else {
+              console.error(
+                "Failed to delete category:",
+                response ? response.error : "Unknown error"
+              );
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleIgnoreDropdown = () => {
