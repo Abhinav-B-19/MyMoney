@@ -18,6 +18,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import updateTransactionData from "@/api/updateTransactionData";
 import Calculator from "@/components/Calculator";
 import { useCategory } from "@/context/CategoryContext";
+import { useAccount } from "@/context/AccountContext";
 
 interface TransactionDetailsProps {
   initialFormData?: {
@@ -104,12 +105,13 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 
   const { contextCategories, setContextCategories } = useCategory();
 
-  const [accounts, setAccounts] = useState<string[]>([
-    "DEBIT CARD",
-    "CREDIT CARD",
-    "SAVINGS",
-    "CASH",
-  ]);
+  // const [accounts, setAccounts] = useState<string[]>([
+  //   "DEBIT CARD",
+  //   "CREDIT CARD",
+  //   "SAVINGS",
+  //   "CASH",
+  // ]);
+  const { contextAccounts, setContextAccounts } = useAccount();
 
   const showDatePicker = () => {
     setDatePickerVisibility(true);
@@ -496,13 +498,15 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
                   </TouchableOpacity>
                 ))}
               {selectingField === "account" &&
-                accounts.map((account) => (
+                contextAccounts.map((account) => (
                   <TouchableOpacity
-                    key={account}
+                    key={account.id}
                     style={styles.selectableItem}
-                    onPress={() => handleAccountSelect(account)}
+                    onPress={() => handleAccountSelect(account.name)}
                   >
-                    <Text style={styles.selectableItemText}>{account}</Text>
+                    <Text style={styles.selectableItemText}>
+                      {account.name}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               {selectingField === "currency" &&

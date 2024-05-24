@@ -1,11 +1,11 @@
-// In MyTabs component
-
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  MaterialCommunityIcons,
+  Ionicons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Navbar from "@/components/Navbar";
 import SecondNavbar from "@/components/SecondNavbar";
@@ -16,7 +16,6 @@ import Analysis from "./Tabs/Analysis";
 import Budgets from "./Tabs/Budgets";
 import DateContext from "../context/DateContext";
 import { COLORS } from "@/constants/colors";
-import { useIsFocused } from "@react-navigation/native";
 
 type RootTabParamList = {
   Records: undefined;
@@ -36,6 +35,7 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   const { selectedDate, handleDateChange } = useContext(DateContext);
   const [isCategoriesScreenFocused, setIsCategoriesScreenFocused] =
     useState(false);
+  const [isAccountsScreenFocused, setIsAccountsScreenFocused] = useState(false);
 
   const navigateToAddTransactionDetails = () => {
     navigation.navigate("AddTransactionDetails"); // Navigate to AddTransactionDetails screen
@@ -44,7 +44,7 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Navbar title="Money Tracker" />
-      {!isCategoriesScreenFocused && (
+      {(!isCategoriesScreenFocused || !isAccountsScreenFocused) && (
         <SecondNavbar
           topSectionText="Top Section"
           bottomSectionText="Bottom Section"
@@ -87,7 +87,6 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
         />
         <Tab.Screen
           name="Accounts"
-          component={Accounts}
           options={{
             headerShown: false,
             tabBarLabel: "Accounts",
@@ -99,7 +98,11 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
               />
             ),
           }}
-        />
+        >
+          {() => (
+            <Accounts setIsAccountsScreenFocused={setIsAccountsScreenFocused} />
+          )}
+        </Tab.Screen>
         <Tab.Screen
           name="Categories"
           options={{
