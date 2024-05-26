@@ -19,8 +19,8 @@ import { useAuth } from "@/context/AuthContext";
 import TaskActivityIndicator from "../TaskActivityIndicator";
 import postNewData from "@/api/postNewData";
 import updateTransactionData from "@/api/updateTransactionData";
-updateTransactionData;
 import { useCategory } from "@/context/CategoryContext";
+
 interface Category {
   id: string;
   transactionType: string;
@@ -37,11 +37,10 @@ const Categories: React.FC<CategoriesProps> = ({
   setIsCategoriesScreenFocused,
   onDeleteSuccess,
 }) => {
-  const { authUser, setAuthUser } = useAuth();
+  const { authUser } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedCategoryId, setEditedCategoryId] = useState<string | null>(null);
-  // const [categories, setCategories] = useState<Category[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newCategory, setNewCategory] = useState<Category>({
     transactionType: "Income",
@@ -54,14 +53,12 @@ const Categories: React.FC<CategoriesProps> = ({
     "money-off",
     "euro-symbol",
     "account-balance-wallet",
-    "Income-card",
   ];
 
   useFocusEffect(
     useCallback(() => {
       console.log("Categories is focused");
       setIsCategoriesScreenFocused(true);
-      // console.log("categories:", categories);
 
       return () => {
         console.log("Categories is unfocused");
@@ -78,9 +75,7 @@ const Categories: React.FC<CategoriesProps> = ({
     try {
       const response = await fetchDataApi("categories", authUser);
       if (response.status === 200 || response.status === 201) {
-        // console.log(response.data);
         setIsLoading(false);
-        // setCategories(response.data);
         setContextCategories(response.data);
       } else {
         console.error("Failed to fetch categories:", response.error);
@@ -101,7 +96,6 @@ const Categories: React.FC<CategoriesProps> = ({
       return;
     }
 
-    // Check if a category with the same type and name already exists
     const categoryExists = contextCategories.some(
       (category) =>
         category.transactionType === newCategory.transactionType &&
@@ -118,7 +112,6 @@ const Categories: React.FC<CategoriesProps> = ({
     console.log(updatedCategory);
     try {
       await postNewData("categories", updatedCategory);
-      // Refresh categories list after adding a new category
       fetchingDataApi();
     } catch (error) {
       console.error("Error posting data:", error);
@@ -135,8 +128,7 @@ const Categories: React.FC<CategoriesProps> = ({
   };
 
   const handleDeleteSuccess = () => {
-    fetchingDataApi(); // Refresh category list after deletion
-    // onDeleteSuccess(); // Notify parent component about successful deletion
+    fetchingDataApi();
   };
 
   const handleEditCategory = (categoryId: string) => {
@@ -146,9 +138,9 @@ const Categories: React.FC<CategoriesProps> = ({
 
     if (editedCategory) {
       setNewCategory(editedCategory);
-      setIsEditMode(true); // Set edit mode to true
+      setIsEditMode(true);
       setModalVisible(true);
-      setEditedCategoryId(categoryId); // Store the id of the edited category
+      setEditedCategoryId(categoryId);
     } else {
       console.log("Category not found");
     }
@@ -168,7 +160,7 @@ const Categories: React.FC<CategoriesProps> = ({
           "categories",
           editedCategoryId,
           updatedCategory
-        ); // Use editedCategoryId
+        );
       }
     } catch (error) {
       console.error("Error updating data:", error);
@@ -194,7 +186,10 @@ const Categories: React.FC<CategoriesProps> = ({
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        // style={styles.scrollView}
+      >
         <View style={styles.categorySection}>
           <Text style={styles.sectionHeader}>Income Categories</Text>
           {contextCategories
@@ -246,17 +241,17 @@ const Categories: React.FC<CategoriesProps> = ({
             <View style={styles.modalContainer}>
               <Pressable
                 onPress={(e) => {
-                  // Check if the press is within the modal content
                   if (e.target === e.currentTarget) {
-                    // Close the modal only if the press is on the overlay
                     setModalVisible(false);
                   }
                 }}
               >
                 <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Add New Category</Text>
+                  <Text style={styles.modalTitle}>
+                    {isEditMode ? "Edit Category" : "Add New Category"}
+                  </Text>
                   <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>transactionType:</Text>
+                    <Text style={styles.inputLabel}>Transaction Type </Text>
                     <View style={styles.buttonGroup}>
                       <TouchableOpacity
                         style={[
@@ -307,7 +302,7 @@ const Categories: React.FC<CategoriesProps> = ({
                     </View>
                   </View>
                   <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Name:</Text>
+                    <Text style={styles.inputLabel}>Name </Text>
                     <TextInput
                       style={styles.textInput}
                       value={newCategory.name}
@@ -316,11 +311,12 @@ const Categories: React.FC<CategoriesProps> = ({
                       }
                     />
                   </View>
-                  <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Icon:</Text>
+                  <View style={styles.iconContainerRow}>
+                    <Text style={styles.inputLabel}>Icon </Text>
                     <ScrollView
                       horizontal
                       contentContainerStyle={styles.iconScrollContainer}
+                      style={styles.iconScrollView}
                     >
                       {icons.map((icon) => (
                         <TouchableOpacity
@@ -339,7 +335,6 @@ const Categories: React.FC<CategoriesProps> = ({
                       ))}
                     </ScrollView>
                   </View>
-
                   <View style={styles.buttonRow}>
                     <Pressable
                       style={[styles.button, styles.buttonClose]}
@@ -349,19 +344,17 @@ const Categories: React.FC<CategoriesProps> = ({
                     </Pressable>
                     {isEditMode ? (
                       <Pressable
-                        style={[styles.button, styles.buttonUpdate]} // Add a new style for update button
-                        onPress={handleUpdateCategory} // Call handleUpdateCategory when update button is pressed
+                        style={[styles.button, styles.buttonUpdate]}
+                        onPress={handleUpdateCategory}
                       >
                         <Text style={styles.textStyle}>Update</Text>
-                        {/* Change button text to Update */}
                       </Pressable>
                     ) : (
                       <Pressable
-                        style={[styles.button, styles.buttonSave]} // Use buttonSave style for Save button
+                        style={[styles.button, styles.buttonSave]}
                         onPress={handleSaveCategory}
                       >
                         <Text style={styles.textStyle}>Save</Text>
-                        {/* Button text remains Save for new category */}
                       </Pressable>
                     )}
                   </View>
@@ -386,7 +379,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // semi-transparent background
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -398,6 +391,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "space-between",
     paddingBottom: 50,
+  },
+  scrollView: {
+    borderWidth: 2,
+    borderColor: "gray",
+    borderRadius: 10,
   },
   categorySection: {
     marginBottom: 16,
@@ -414,7 +412,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     alignSelf: "center",
-    backgroundColor: "blue",
+    backgroundColor: "#2196F3",
     borderRadius: 10,
     width: "50%",
     height: 60,
@@ -423,6 +421,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: "white",
+    fontWeight: "bold",
   },
   modalContainer: {
     flex: 1,
@@ -435,7 +434,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#f0f0f0", // Light gray background
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     alignItems: "center",
@@ -447,15 +446,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    width: "80%",
+    width: "90%",
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
-  },
-  inputContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
+    textAlign: "center",
+    width: "100%",
   },
   inputContainerRow: {
     marginBottom: 16,
@@ -463,17 +461,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    alignContent: "center",
+  },
+  iconContainerRow: {
+    marginBottom: 16,
+    width: "100%",
+    alignItems: "center",
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 8,
   },
   buttonGroup: {
     flexDirection: "row",
     justifyContent: "space-around",
-    width: "80%",
+    width: "60%",
   },
   typeButton: {
     padding: 10,
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   typeButtonActive: {
-    backgroundColor: "blue",
+    backgroundColor: "#2196F3",
   },
   typeButtonText: {
     fontSize: 16,
@@ -497,11 +498,18 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 10,
     padding: 8,
-    width: "80%",
+    width: "75%",
   },
   iconScrollContainer: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  iconScrollView: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
   },
   iconContainer: {
     padding: 8,
@@ -511,26 +519,26 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   iconContainerActive: {
-    borderColor: "blue",
+    borderColor: "#2196F3",
     backgroundColor: "#f0f8ff",
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
+    marginTop: 20,
   },
   button: {
     borderRadius: 10,
     padding: 10,
     elevation: 2,
+    width: "40%",
   },
   buttonClose: {
-    backgroundColor: "red",
-    borderWidth: 1,
-    borderColor: "#ccc",
+    backgroundColor: "#f44336",
   },
   buttonSave: {
-    backgroundColor: "blue",
+    backgroundColor: "#2196F3",
   },
   textStyle: {
     color: "white",
@@ -538,7 +546,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   buttonUpdate: {
-    backgroundColor: "green",
+    backgroundColor: "#4CAF50",
   },
 });
 

@@ -80,6 +80,11 @@ const Accounts: React.FC<AccountsProps> = ({
   };
 
   const handleAddAccount = () => {
+    setNewAccount({
+      name: "",
+      balance: 0,
+      icon: "account-balance",
+    });
     setModalVisible(true);
   };
 
@@ -200,6 +205,7 @@ const Accounts: React.FC<AccountsProps> = ({
                 ${totalExpense}
               </Text>
             </View>
+            <View style={styles.verticalLine} />
             <View style={styles.labelValuePair}>
               <Text style={styles.overallLabel}>Income so far:</Text>
               <Text style={[styles.overallValue, { color: "green" }]}>
@@ -207,6 +213,7 @@ const Accounts: React.FC<AccountsProps> = ({
               </Text>
             </View>
           </View>
+          <View style={styles.horizontalLine} />
           <View style={styles.overallItem}>
             <View style={styles.labelValuePair}>
               <Text style={styles.overallLabel}>Total balance:</Text>
@@ -267,7 +274,27 @@ const Accounts: React.FC<AccountsProps> = ({
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Add New Account</Text>
                   <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Name:</Text>
+                    <Text style={styles.inputLabel}>Initial amount</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      value={
+                        newAccount.balance > 0 ? String(newAccount.balance) : ""
+                      }
+                      placeholder="0"
+                      onChangeText={(text) =>
+                        setNewAccount({
+                          ...newAccount,
+                          balance: parseFloat(text) || 0,
+                        })
+                      }
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <Text style={styles.messageText}>
+                    *Initial amount will not be reflected in analysis.
+                  </Text>
+                  <View style={styles.inputContainerRow}>
+                    <Text style={styles.inputLabel}>Name</Text>
                     <TextInput
                       style={styles.textInput}
                       value={newAccount.name}
@@ -276,25 +303,12 @@ const Accounts: React.FC<AccountsProps> = ({
                       }
                     />
                   </View>
-                  <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Balance:</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      value={String(newAccount.balance)}
-                      onChangeText={(text) =>
-                        setNewAccount({
-                          ...newAccount,
-                          balance: parseFloat(text),
-                        })
-                      }
-                      keyboardType="numeric"
-                    />
-                  </View>
-                  <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Icon:</Text>
+                  <View style={styles.iconContainerRow}>
+                    <Text style={styles.inputLabel}>Icon </Text>
                     <ScrollView
                       horizontal
                       contentContainerStyle={styles.iconScrollContainer}
+                      style={styles.iconScrollView}
                     >
                       {icons.map((icon) => (
                         <TouchableOpacity
@@ -311,7 +325,6 @@ const Accounts: React.FC<AccountsProps> = ({
                       ))}
                     </ScrollView>
                   </View>
-
                   <View style={styles.buttonRow}>
                     <Pressable
                       style={[styles.button, styles.buttonClose]}
@@ -355,7 +368,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: 10,
     borderBottomWidth: 2,
     borderBottomColor: "gray",
     paddingBottom: 4,
@@ -368,7 +381,6 @@ const styles = StyleSheet.create({
   overallItem: {
     flexDirection: "row",
     alignItems: "center",
-    margin: 10,
     justifyContent: "center",
   },
   overallLabel: {
@@ -435,7 +447,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     alignSelf: "center",
-    backgroundColor: "blue",
+    backgroundColor: "#2196F3",
     borderRadius: 10,
     width: "50%",
     height: 60,
@@ -444,6 +456,8 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: "white",
+    // fontSize: 16,
+    fontWeight: "bold",
   },
   modalContainer: {
     flex: 1,
@@ -456,7 +470,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 20,
     alignItems: "center",
@@ -469,14 +483,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "80%",
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 20,
+    color: "#333",
   },
   inputContainerRow: {
-    marginBottom: 16,
+    marginBottom: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -484,26 +501,36 @@ const styles = StyleSheet.create({
     alignContent: "center",
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#555",
+    marginRight: 10,
+  },
+  messageText: {
+    color: "#666",
+    fontSize: 14,
+    marginBottom: 16,
+    textAlign: "center",
   },
   textInput: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
-    padding: 8,
-    width: "80%",
+    padding: 12,
+    width: "70%",
+    fontSize: 16,
+    color: "#333",
   },
   iconScrollContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   iconContainer: {
-    padding: 8,
+    padding: 12,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ccc",
-    marginHorizontal: 4,
+    marginHorizontal: 6,
   },
   iconContainerActive: {
     borderColor: "blue",
@@ -513,27 +540,45 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
+    marginTop: 20,
   },
   button: {
     borderRadius: 10,
-    padding: 10,
+    padding: 14,
     elevation: 2,
+    minWidth: "30%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonClose: {
     backgroundColor: "red",
-    borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "red",
   },
   buttonSave: {
-    backgroundColor: "blue",
-  },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
+    backgroundColor: "#2196F3",
+    borderColor: "#2196F3",
   },
   buttonUpdate: {
     backgroundColor: "green",
+    borderColor: "green",
+  },
+  textStyle: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  iconContainerRow: {
+    // marginBottom: 16,
+    width: "100%",
+    alignItems: "center",
+  },
+  iconScrollView: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
   },
 });
 

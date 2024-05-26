@@ -44,7 +44,7 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Navbar title="Money Tracker" />
-      {(!isCategoriesScreenFocused || !isAccountsScreenFocused) && (
+      {!isCategoriesScreenFocused && !isAccountsScreenFocused && (
         <SecondNavbar
           topSectionText="Top Section"
           bottomSectionText="Bottom Section"
