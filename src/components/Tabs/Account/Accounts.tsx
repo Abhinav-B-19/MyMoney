@@ -10,6 +10,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -131,6 +132,10 @@ const Accounts: React.FC<AccountsProps> = ({
     });
   };
 
+  const handleDeleteSuccess = () => {
+    fetchingDataApi();
+  };
+
   const handleEditAccount = (accountId: string) => {
     const editedAccount = contextAccounts.find(
       (account) => account.id === accountId
@@ -174,6 +179,59 @@ const Accounts: React.FC<AccountsProps> = ({
       balance: 0,
       icon: "account-balance",
     });
+  };
+
+  const handleIgnoreAccount = (accountId: string) => {
+    const editedAccount = contextAccounts.find(
+      (account) => account.id === accountId
+    );
+
+    if (editedAccount?.isIgnored) {
+      // Directly perform the operation if the account is already ignored
+      const updatedAccount = {
+        ...editedAccount,
+        isIgnored: false, // Restore the account
+      };
+
+      updateAccount(updatedAccount, accountId);
+    } else {
+      // Show alert if the account is not ignored
+      Alert.alert(
+        "Ignore this account?",
+        "Unless used, this account will not appear anywhere else. You can restore it at any time. Do you want to proceed?",
+        [
+          {
+            text: "No",
+            style: "cancel",
+          },
+          {
+            text: "Yes",
+            onPress: () => {
+              const updatedAccount = {
+                ...editedAccount,
+                isIgnored: true, // Ignore the account
+              };
+
+              updateAccount(updatedAccount, accountId);
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  const updateAccount = async (updatedAccount, accountId) => {
+    try {
+      await updateTransactionData("accounts", accountId, updatedAccount);
+
+      setContextAccounts((prevAccounts) =>
+        prevAccounts.map((account) =>
+          account.id === accountId ? updatedAccount : account
+        )
+      );
+    } catch (error) {
+      console.error("Error updating account:", error);
+    }
   };
 
   const totalBalance = contextAccounts.reduce(
@@ -246,7 +304,9 @@ const Accounts: React.FC<AccountsProps> = ({
             <AccountCard
               key={account.id}
               account={account}
-              onEditPress={handleEditAccount} // Pass the handleEditAccount function to the AccountCard component
+              onDeleteSuccess={handleDeleteSuccess}
+              onEditPress={handleEditAccount}
+              onIgnorePress={handleIgnoreAccount}
             />
           ))}
         </View>
@@ -282,14 +342,12 @@ const Accounts: React.FC<AccountsProps> = ({
                     <Text style={styles.inputLabel}>Initial amount</Text>
                     <TextInput
                       style={styles.textInput}
-                      value={
-                        newAccount.balance > 0 ? String(newAccount.balance) : ""
-                      }
+                      value={String(newAccount.balance)} // Convert to string to display negative numbers properly
                       placeholder="0"
                       onChangeText={(text) =>
                         setNewAccount({
                           ...newAccount,
-                          balance: parseFloat(text) || 0,
+                          balance: parseFloat(text) || 0, // Parse float to handle negative numbers
                         })
                       }
                       keyboardType="numeric"
@@ -413,6 +471,16 @@ const styles = StyleSheet.create({
   loadingIndicator: {
     marginTop: 20,
   },
+  horizontalLine: {
+    borderBottomColor: "gray",
+    borderBottomWidth: 1,
+    marginVertical: 10,
+  },
+  verticalLine: {
+    borderLeftColor: "gray",
+    borderLeftWidth: 1,
+    marginHorizontal: 10,
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -526,16 +594,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-  iconScrollContainer: {
-    flexDirection: "row",
+  iconContainerRow: {
+    width: "100%",
     alignItems: "center",
+  },
+  iconScrollView: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    marginTop: 10,
   },
   iconContainer: {
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ccc",
-    marginHorizontal: 6,
+    marginHorizontal: 8,
+    marginVertical: 8,
   },
   iconContainerActive: {
     borderColor: "blue",
@@ -572,18 +647,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     textAlign: "center",
-  },
-  iconContainerRow: {
-    // marginBottom: 16,
-    width: "100%",
-    alignItems: "center",
-  },
-  iconScrollView: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 10,
   },
 });
 
