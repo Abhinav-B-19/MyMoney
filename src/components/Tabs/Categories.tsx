@@ -10,6 +10,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -26,6 +27,7 @@ interface Category {
   transactionType: string;
   name: string;
   icon: string;
+  isIgnored: boolean;
 }
 
 interface CategoriesProps {
@@ -146,6 +148,59 @@ const Categories: React.FC<CategoriesProps> = ({
     }
   };
 
+  const handleIgnoreCategory = (categoryId: string) => {
+    const editedCategory = contextCategories.find(
+      (category) => category.id === categoryId
+    );
+
+    if (editedCategory?.isIgnored) {
+      // Directly perform the operation if the category is already ignored
+      const updatedCategory = {
+        ...editedCategory,
+        isIgnored: false, // Restore the category
+      };
+
+      updateCategory(updatedCategory, categoryId);
+    } else {
+      // Show alert if the category is not ignored
+      Alert.alert(
+        "Ignore this category?",
+        "Unless used, this category will not appear anywhere else. You can restore it at any time. Do you want to proceed?",
+        [
+          {
+            text: "No",
+            style: "cancel",
+          },
+          {
+            text: "Yes",
+            onPress: () => {
+              const updatedCategory = {
+                ...editedCategory,
+                isIgnored: true, // Ignore the category
+              };
+
+              updateCategory(updatedCategory, categoryId);
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  const updateCategory = async (updatedCategory, categoryId) => {
+    try {
+      await updateTransactionData("categories", categoryId, updatedCategory);
+
+      setContextCategories((prevCategories) =>
+        prevCategories.map((category) =>
+          category.id === categoryId ? updatedCategory : category
+        )
+      );
+    } catch (error) {
+      console.error("Error updating category:", error);
+    }
+  };
+
   const handleUpdateCategory = async () => {
     if (!newCategory.name || !newCategory.icon) {
       alert("Please fill in all fields.");
@@ -202,6 +257,7 @@ const Categories: React.FC<CategoriesProps> = ({
                 iconName={category.icon}
                 onDeleteSuccess={handleDeleteSuccess}
                 onEditPress={handleEditCategory}
+                onIgnorePress={handleIgnoreCategory}
               />
             ))}
         </View>
@@ -415,7 +471,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2196F3",
     borderRadius: 10,
     width: "50%",
-    height: 60,
+    height: 45,
     justifyContent: "center",
     alignItems: "center",
   },

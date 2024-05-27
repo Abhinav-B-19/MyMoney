@@ -11,7 +11,7 @@ import Navbar from "@/components/Navbar";
 import SecondNavbar from "@/components/SecondNavbar";
 import MoneyTrackerPage from "@/screens/MoneyTrackerPage";
 import Categories from "./Tabs/Categories";
-import Accounts from "./Tabs/Accounts";
+import Accounts from "./Tabs/Account/Accounts";
 import Analysis from "./Tabs/Analysis";
 import Budgets from "./Tabs/Budgets";
 import DateContext from "../context/DateContext";

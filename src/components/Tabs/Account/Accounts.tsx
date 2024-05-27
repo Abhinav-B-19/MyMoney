@@ -15,16 +15,18 @@ import { useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import fetchDataApi from "@/api/fetchDataApi";
 import { useAuth } from "@/context/AuthContext";
-import TaskActivityIndicator from "../TaskActivityIndicator";
+import TaskActivityIndicator from "../../TaskActivityIndicator";
 import postNewData from "@/api/postNewData";
 import updateTransactionData from "@/api/updateTransactionData";
 import { useAccount } from "@/context/AccountContext";
+import AccountCard from "./AccountCard";
 
 interface Account {
   id: string;
   name: string;
   balance: number;
   icon: string;
+  isIgnored: boolean;
 }
 
 interface AccountsProps {
@@ -44,10 +46,17 @@ const Accounts: React.FC<AccountsProps> = ({
   const [newAccount, setNewAccount] = useState<Account>({
     name: "",
     balance: 0,
-    icon: "account-balance",
+    icon: "credit-card",
   });
   const { contextAccounts, setContextAccounts } = useAccount();
-  const icons = ["account-balance", "account-circle", "account-balance-wallet"];
+  const icons = [
+    "account-balance",
+    "account-circle",
+    "account-balance-wallet",
+    "credit-card",
+    "attach-money",
+    "savings",
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -126,6 +135,7 @@ const Accounts: React.FC<AccountsProps> = ({
     const editedAccount = contextAccounts.find(
       (account) => account.id === accountId
     );
+    console.log(editedAccount);
 
     if (editedAccount) {
       setNewAccount(editedAccount);
@@ -233,16 +243,11 @@ const Accounts: React.FC<AccountsProps> = ({
         <View style={styles.accountSection}>
           <Text style={styles.sectionHeader}>Accounts</Text>
           {contextAccounts.map((account) => (
-            <TouchableOpacity
+            <AccountCard
               key={account.id}
-              onPress={() => handleEditAccount(account.id)}
-            >
-              <View style={styles.accountItem}>
-                <MaterialIcons name={account.icon} size={24} color="black" />
-                <Text style={styles.accountName}>{account.name}</Text>
-                <Text style={styles.accountBalance}>${account.balance}</Text>
-              </View>
-            </TouchableOpacity>
+              account={account}
+              onEditPress={handleEditAccount} // Pass the handleEditAccount function to the AccountCard component
+            />
           ))}
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddAccount}>
@@ -450,7 +455,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2196F3",
     borderRadius: 10,
     width: "50%",
-    height: 60,
+    height: 45,
     justifyContent: "center",
     alignItems: "center",
   },

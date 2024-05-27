@@ -1,5 +1,3 @@
-// CategoryViewItem.tsx
-
 import React from "react";
 import {
   View,
@@ -18,6 +16,7 @@ interface Category {
   transactionType: string;
   name: string;
   icon: string;
+  isIgnored: boolean;
 }
 
 interface CategoryViewItemProps {
@@ -26,6 +25,7 @@ interface CategoryViewItemProps {
   iconName: string;
   onDeleteSuccess: () => void;
   onEditPress: (categoryId: string) => void;
+  onIgnorePress: (categoryId: string) => void;
 }
 
 const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
@@ -34,8 +34,9 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
   iconName,
   onDeleteSuccess,
   onEditPress,
+  onIgnorePress,
 }) => {
-  const { id, name } = category;
+  const { id, name, isIgnored } = category;
 
   const [isDropdownVisible, setIsDropdownVisible] = React.useState(false);
   const [popupPosition, setPopupPosition] = React.useState({ x: 0, y: 0 });
@@ -46,8 +47,8 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
     const { pageX, pageY } = event.nativeEvent;
     setIsDropdownVisible(true);
     setPopupPosition({
-      x: event.nativeEvent.pageX + 35,
-      y: event.nativeEvent.pageY - 15,
+      x: pageX + 35,
+      y: pageY - 15,
     });
   };
 
@@ -94,6 +95,7 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
 
   const handleIgnoreDropdown = () => {
     setIsDropdownVisible(false);
+    onIgnorePress(id);
   };
 
   const onLayoutDropdown = () => {
@@ -105,10 +107,20 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
   };
 
   return (
-    <View style={styles.categoryItem}>
+    <View
+      style={[styles.categoryItem, isIgnored && styles.ignoredCategoryItem]}
+    >
       <View style={styles.leftSection}>
-        <MaterialIcons name={iconName} size={24} color="black" />
-        <Text style={styles.categoryText}>{name}</Text>
+        <MaterialIcons
+          name={iconName}
+          size={24}
+          color={isIgnored ? "#ccc" : "black"}
+        />
+        <Text
+          style={[styles.categoryText, isIgnored && styles.ignoredCategoryText]}
+        >
+          {name}
+        </Text>
       </View>
       <TouchableOpacity onPress={handleOpenDropdown}>
         <MaterialIcons name="more-horiz" size={24} color="black" />
@@ -129,20 +141,12 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
             ]}
             onLayout={onLayoutDropdown}
           >
-            <Pressable
-              style={styles.dropdownItem}
-              onPress={() => {
-                handleEditDropdown();
-              }}
-            >
+            <Pressable style={styles.dropdownItem} onPress={handleEditDropdown}>
               <Text>Edit</Text>
             </Pressable>
             <Pressable
               style={styles.dropdownItem}
-              onPress={() => {
-                console.log("Delete");
-                handleDeleteDropdown();
-              }}
+              onPress={handleDeleteDropdown}
             >
               <Text>Delete</Text>
             </Pressable>
@@ -150,7 +154,7 @@ const CategoryViewItem: React.FC<CategoryViewItemProps> = ({
               style={styles.dropdownItem}
               onPress={handleIgnoreDropdown}
             >
-              <Text>Ignore</Text>
+              <Text>{isIgnored ? "Restore" : "Ignore"}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -172,12 +176,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: "white",
   },
+  ignoredCategoryItem: {
+    backgroundColor: "#f0f0f0",
+    borderColor: "#ccc",
+  },
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
   },
   categoryText: {
     marginLeft: 8,
+    color: "black",
+  },
+  ignoredCategoryText: {
+    textDecorationLine: "line-through",
+    color: "#ccc",
   },
   overlay: {
     flex: 1,
