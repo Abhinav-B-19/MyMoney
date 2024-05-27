@@ -114,7 +114,11 @@ const Accounts: React.FC<AccountsProps> = ({
     }
 
     setIsLoading(true);
-    const updatedAccount = { ...newAccount, userId: authUser };
+    const updatedAccount = {
+      ...newAccount,
+      userId: authUser,
+      isIgnored: false,
+    };
     try {
       await postNewData("accounts", updatedAccount);
       fetchingDataApi();

@@ -14,10 +14,10 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
-import CategoryViewItem from "../CategoryViewItem";
+import CategoryViewItem from "./CategoryViewItem";
 import fetchDataApi from "@/api/fetchDataApi";
 import { useAuth } from "@/context/AuthContext";
-import TaskActivityIndicator from "../TaskActivityIndicator";
+import TaskActivityIndicator from "../../TaskActivityIndicator";
 import postNewData from "@/api/postNewData";
 import updateTransactionData from "@/api/updateTransactionData";
 import { useCategory } from "@/context/CategoryContext";
@@ -88,7 +88,12 @@ const Categories: React.FC<CategoriesProps> = ({
   };
 
   const handleAddCategory = () => {
-    console.log("Add button pressed");
+    setNewCategory({
+      transactionType: "Income",
+      name: "",
+      icon: "attach-money",
+    });
+    setIsEditMode(false);
     setModalVisible(true);
   };
 
@@ -110,8 +115,13 @@ const Categories: React.FC<CategoriesProps> = ({
     }
 
     setIsLoading(true);
-    const updatedCategory = { ...newCategory, userId: authUser };
-    console.log(updatedCategory);
+
+    const updatedCategory = {
+      ...newCategory,
+      userId: authUser,
+      isIgnored: false,
+    };
+
     try {
       await postNewData("categories", updatedCategory);
       fetchingDataApi();
@@ -207,7 +217,11 @@ const Categories: React.FC<CategoriesProps> = ({
       return;
     }
     setIsLoading(true);
-    const updatedCategory = { ...newCategory, userId: authUser };
+    const updatedCategory = {
+      ...newCategory,
+      userId: authUser,
+      isIgnored: false,
+    };
     console.log(updatedCategory);
     try {
       if (editedCategoryId) {
@@ -273,6 +287,7 @@ const Categories: React.FC<CategoriesProps> = ({
                 iconName={category.icon}
                 onDeleteSuccess={handleDeleteSuccess}
                 onEditPress={handleEditCategory}
+                onIgnorePress={handleIgnoreCategory}
               />
             ))}
         </View>

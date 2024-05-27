@@ -485,30 +485,34 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           <TouchableWithoutFeedback onPress={handleOutsidePress}>
             <View style={styles.selectionModal}>
               {selectingField === "category" &&
-                filteredCategories.map((category) => (
-                  <TouchableOpacity
-                    key={category.id} // Assuming 'id' is a unique identifier for each category
-                    style={styles.selectableItem}
-                    onPress={() => handleCategorySelect(category.name)} // Assuming 'name' is the category name
-                  >
-                    <Text style={styles.selectableItemText}>
-                      {category.name}
-                    </Text>
-                    {/* Assuming 'name' is the category name */}
-                  </TouchableOpacity>
-                ))}
+                filteredCategories.map((category) =>
+                  category.isIgnored ? null : (
+                    <TouchableOpacity
+                      key={category.id} // Assuming 'id' is a unique identifier for each category
+                      style={styles.selectableItem}
+                      onPress={() => handleCategorySelect(category.name)} // Assuming 'name' is the category name
+                    >
+                      <Text style={styles.selectableItemText}>
+                        {category.name}
+                      </Text>
+                      {/* Assuming 'name' is the category name */}
+                    </TouchableOpacity>
+                  )
+                )}
               {selectingField === "account" &&
-                contextAccounts.map((account) => (
-                  <TouchableOpacity
-                    key={account.id}
-                    style={styles.selectableItem}
-                    onPress={() => handleAccountSelect(account.name)}
-                  >
-                    <Text style={styles.selectableItemText}>
-                      {account.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                contextAccounts.map((account) =>
+                  account.isIgnored ? null : (
+                    <TouchableOpacity
+                      key={account.id}
+                      style={styles.selectableItem}
+                      onPress={() => handleAccountSelect(account.name)}
+                    >
+                      <Text style={styles.selectableItemText}>
+                        {account.name}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                )}
               {selectingField === "currency" &&
                 currencies.map((currency) => (
                   <TouchableOpacity
