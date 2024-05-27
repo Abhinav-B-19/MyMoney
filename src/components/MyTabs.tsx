@@ -10,7 +10,7 @@ import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Navbar from "@/components/Navbar";
 import SecondNavbar from "@/components/SecondNavbar";
 import MoneyTrackerPage from "@/screens/MoneyTrackerPage";
-import Categories from "./Tabs/Categories";
+import Categories from "./Tabs/Categories/Categories";
 import Accounts from "./Tabs/Account/Accounts";
 import Analysis from "./Tabs/Analysis";
 import Budgets from "./Tabs/Budgets";

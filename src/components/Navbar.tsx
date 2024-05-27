@@ -1,25 +1,20 @@
 import React from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { IconButton } from "react-native-paper";
-import { auth, db } from "@/firebase/firebase";
+import { useNavigation } from "@react-navigation/native";
+import { auth } from "@/firebase/firebase";
 
 interface NavbarProps {
   title: string;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ title }) => {
-  const handleSignout = async () => {
-    await auth.signOut();
+  const navigation = useNavigation();
+
+  const goToProfile = () => {
+    navigation.navigate("ProfileScreen");
   };
-  const Modal = () => {
-    Alert.alert("Auth App", "Do you really want to logout", [
-      {
-        text: "Cancel",
-        onPress: () => console.log("Cancel Pressed"),
-      },
-      { text: "Logout", onPress: handleSignout },
-    ]);
-  };
+
   return (
     <View style={styles.navbar}>
       <View style={styles.leftButtons}>
@@ -33,7 +28,7 @@ const Navbar: React.FC<NavbarProps> = ({ title }) => {
       </View>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.rightButtons}>
-        <IconButton icon="account-circle" onPress={Modal} />
+        <IconButton icon="account-circle" onPress={goToProfile} />
       </View>
     </View>
   );

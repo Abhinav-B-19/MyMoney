@@ -4,6 +4,7 @@ import MyTabs from "@/components/MyTabs";
 import DateContext from "../context/DateContext";
 import ViewModeContext from "../context/ViewModeContext";
 import AddTransactionDetails from "@/screens/AddTransactionDetails";
+import ProfileScreen from "@/screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,11 @@ export default function AuthStack() {
           <Stack.Screen
             name="AddTransactionDetails"
             component={AddTransactionDetails}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProfileScreen"
+            component={ProfileScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
