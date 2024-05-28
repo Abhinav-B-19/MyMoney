@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { IconButton } from "react-native-paper";
 import {
@@ -16,24 +16,12 @@ import {
 type PickerProps = {
   date: Date;
   onDateChange: (newDate: Date) => void;
-  mode: "monthly" | "weekly" | "daily"; // Define the mode type
+  mode: "monthly" | "weekly" | "daily";
 };
 
 const Picker: React.FC<PickerProps> = ({ date, onDateChange, mode }) => {
   const startOfWeekDate = startOfWeek(date);
   const endOfWeekDate = endOfWeek(date);
-
-  // useEffect(() => {
-  //   console.log(
-  //     "picker Picker: ",
-  //     mode,
-  //     date,
-  //     "startOfWeekDate: ",
-  //     startOfWeekDate,
-  //     "endOfWeekDate: ",
-  //     endOfWeekDate
-  //   );
-  // });
 
   const handlePrev = () => {
     let newDate: Date;
@@ -74,7 +62,7 @@ const Picker: React.FC<PickerProps> = ({ date, onDateChange, mode }) => {
   };
 
   return (
-    <View style={styles.row}>
+    <View style={styles.container}>
       <IconButton icon={"arrow-left"} onPress={handlePrev} />
       <Text>
         {mode === "daily"
@@ -92,11 +80,11 @@ const Picker: React.FC<PickerProps> = ({ date, onDateChange, mode }) => {
 };
 
 const styles = StyleSheet.create({
-  row: {
+  container: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
   },
 });
 

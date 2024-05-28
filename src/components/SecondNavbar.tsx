@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useContext } from "react";
-import { View, StyleSheet, Text, FlatList, Modal } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { IconButton, Button } from "react-native-paper";
 import FilterPopoverMenu from "./FilterPopoverMenu";
 import { ViewModeOptions, ShowTotalOptions } from "@/constants/filterOptions";
@@ -34,6 +41,7 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
   useEffect(() => {
     console.log("viewMode in sn: ", viewMode);
   }, []);
+
   const handleDateChange = (newDate: Date) => {
     setDate(newDate);
     onDateChange(newDate);
@@ -58,38 +66,44 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
     closeModal();
   };
 
+  const handleModalBackgroundPress = () => {
+    // Close the modal when clicking outside the modalContent
+    closeModal();
+  };
+
   return (
     <View style={styles.container}>
-      <View style={[styles.section, styles.topSection]}>
+      <View style={styles.topSection}>
         <FlatList
-          ListHeaderComponent={
+          data={[""]}
+          scrollEnabled={false} // Set scrollEnabled to false
+          renderItem={() => (
             <Picker
               date={date}
               onDateChange={handleDateChange}
               mode={viewMode}
             />
-          }
-          data={[]}
-          renderItem={() => <View />}
+          )}
+          keyExtractor={(item, index) => index.toString()}
         />
         <IconButton
+          style={styles.iconSection}
           icon={"filter"}
-          style={styles.filterIcon}
           onPress={handleFilterChange}
         />
       </View>
       <View style={styles.bottomSection}>
         <View style={[styles.bottomSectionItem, styles.halfSection]}>
-          <Text>Expense</Text>
-          <Text style={styles.red}>{expenseTotal}</Text>
+          <Text style={styles.sectionText}>Expense</Text>
+          <Text style={styles.expenseTotal}>{expenseTotal}</Text>
         </View>
         <View style={[styles.bottomSectionItem, styles.halfSection]}>
-          <Text>Income</Text>
-          <Text style={styles.green}>{incomeTotal}</Text>
+          <Text style={styles.sectionText}>Income</Text>
+          <Text style={styles.incomeTotal}>{incomeTotal}</Text>
         </View>
         {selectedTotalOption && (
           <View style={[styles.bottomSectionItem, styles.halfSection]}>
-            <Text>Total</Text>
+            <Text style={styles.sectionText}>Total</Text>
             <Text style={overallTotal >= 0 ? styles.green : styles.red}>
               {overallTotal}
             </Text>
@@ -97,17 +111,21 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
         )}
       </View>
       <Modal visible={showModal} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <FilterPopoverMenu
-              onSelectFilter={handleSelectFilter}
-              onSelectTotalDisplay={handleSelectTotalDisplay}
-              selectedViewMode={selectedViewMode}
-              selectedTotalOption={selectedTotalOption}
-            />
-            <Button onPress={closeModal}>Close</Button>
+        <TouchableWithoutFeedback onPress={handleModalBackgroundPress}>
+          <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
+                <FilterPopoverMenu
+                  onSelectFilter={handleSelectFilter}
+                  onSelectTotalDisplay={handleSelectTotalDisplay}
+                  selectedViewMode={viewMode}
+                  selectedTotalOption={selectedTotalOption}
+                />
+                <Button onPress={closeModal}>Close</Button>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
@@ -119,18 +137,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
   },
-  section: {
+  topSection: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     height: 50,
-    paddingHorizontal: 20,
-  },
-  topSection: {
     borderBottomWidth: 1.5,
     borderBottomColor: "#ccc",
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
+  },
+  iconSection: {
+    alignItems: "flex-end",
+    paddingRight: 10,
   },
   bottomSection: {
     flexDirection: "row",
@@ -146,9 +162,10 @@ const styles = StyleSheet.create({
   halfSection: {
     backgroundColor: "white",
     height: 40,
-  },
-  filterIcon: {
-    marginHorizontal: 0,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
     flex: 1,
@@ -167,6 +184,18 @@ const styles = StyleSheet.create({
   },
   red: {
     color: "red",
+  },
+  sectionText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  expenseTotal: {
+    fontSize: 14,
+    color: "red",
+  },
+  incomeTotal: {
+    fontSize: 14,
+    color: "green",
   },
 });
 
