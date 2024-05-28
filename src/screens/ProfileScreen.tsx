@@ -9,16 +9,17 @@ import {
 } from "react-native";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
+import { useUserContext } from "@/context/UserContext";
 
 const ProfileScreen: React.FC = () => {
   const [authUser, setAuthUser] = useState<any>(null);
+  const { userCountry, userCurrency } = useUserContext();
   const navigation = useNavigation();
 
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is signed in
         setAuthUser(user);
         console.log(`Successfully fetched user data: ${user.uid}`);
       } else {
@@ -122,7 +123,18 @@ const ProfileScreen: React.FC = () => {
                 : "Not available"}
             </Text>
           </Text>
-          {/* Add more user details as needed */}
+          <Text style={styles.userDetail}>
+            Country:{" "}
+            <Text style={styles.userDetailValue}>
+              {userCountry ?? "Not provided"}
+            </Text>
+          </Text>
+          <Text style={styles.userDetail}>
+            Currency:{" "}
+            <Text style={styles.userDetailValue}>
+              {userCurrency ?? "Not provided"}
+            </Text>
+          </Text>
         </View>
       ) : (
         <Text style={styles.loadingText}>Loading user information...</Text>

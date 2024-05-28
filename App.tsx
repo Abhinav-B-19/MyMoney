@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button } from "react-native";
+import { View, Text, Button, StyleSheet } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 import AppNavigator from "./AppNavigator";
 import { Provider } from "react-redux";
 import { store } from "./src/redux/store";
-import { NavigationContainer } from "@react-navigation/native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/context/AuthContext";
 import { TotalProvider } from "@/context/TotalContext";
 import { CategoryProvider } from "@/context/CategoryContext";
 import { AccountProvider } from "@/context/AccountContext";
 import NetInfo from "@react-native-community/netinfo";
-import { checkFirstTimeOrLongTime } from "@/utils/utils";
+import UserInfoModal from "@/components/UserInfoModal";
+import { getUserInfo, setUserInfo } from "@/utils/utils";
+import { UserProvider } from "@/context/UserContext";
 
 const App: React.FC = () => {
   const [isConnected, setIsConnected] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [userInfo, setUserInfoState] = useState<{
+    country: string | null;
+    currency: string | null;
+  }>({ country: null, currency: null });
 
   useEffect(() => {
-    // Check network connectivity when the component mounts
     checkInternetConnection();
-    checkFirstTimeOrLongTime();
+    checkUserInfo();
   }, []);
 
   const checkInternetConnection = async () => {
@@ -27,42 +31,78 @@ const App: React.FC = () => {
     setIsConnected(state.isConnected);
   };
 
-  const retryCheckConnection = () => {
-    checkInternetConnection();
+  const checkUserInfo = async () => {
+    const info = await getUserInfo();
+    console.log("User Info: ", info);
+
+    if (!info.country || !info.currency) {
+      setIsModalVisible(true);
+    } else {
+      setUserInfoState(info);
+    }
+  };
+
+  const handleModalClose = async () => {
+    setIsModalVisible(false);
+    const info = await getUserInfo();
+    setUserInfoState(info);
+  };
+
+  const handleUserInfoSave = async (country: string, currency: string) => {
+    console.log("User Info: ", country, currency);
+    await setUserInfo(country, currency);
+    handleModalClose();
   };
 
   if (!isConnected) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <NoInternetConnectionScreen onRetry={retryCheckConnection} />
+      <View style={styles.centeredContainer}>
+        <NoInternetConnectionScreen onRetry={checkInternetConnection} />
       </View>
     );
   }
 
   return (
     <AuthProvider>
-      <CategoryProvider>
-        <AccountProvider>
-          <TotalProvider>
-            <Provider store={store}>
-              <PaperProvider>
-                <AppNavigator />
-              </PaperProvider>
-            </Provider>
-          </TotalProvider>
-        </AccountProvider>
-      </CategoryProvider>
+      <UserProvider>
+        <CategoryProvider>
+          <AccountProvider>
+            <TotalProvider>
+              <Provider store={store}>
+                <PaperProvider>
+                  <AppNavigator />
+                  <UserInfoModal
+                    isVisible={isModalVisible}
+                    onClose={handleModalClose}
+                    onSave={handleUserInfoSave}
+                  />
+                </PaperProvider>
+              </Provider>
+            </TotalProvider>
+          </AccountProvider>
+        </CategoryProvider>
+      </UserProvider>
     </AuthProvider>
   );
 };
 
-const NoInternetConnectionScreen = ({ onRetry }) => {
+const NoInternetConnectionScreen: React.FC<{ onRetry: () => void }> = ({
+  onRetry,
+}) => {
   return (
-    <View>
+    <View style={styles.centeredContainer}>
       <Text>No Internet Connection</Text>
       <Button title="Retry" onPress={onRetry} />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  centeredContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
 
 export default App;

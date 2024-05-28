@@ -38,3 +38,29 @@ export const checkFirstTimeOrLongTime = async (): Promise<void> => {
     console.error("Error:", error);
   }
 };
+
+export const getUserInfo = async (): Promise<{
+  country: string | null;
+  currency: string | null;
+}> => {
+  try {
+    const country = await AsyncStorage.getItem("country");
+    const currency = await AsyncStorage.getItem("currency");
+    return { country, currency };
+  } catch (e) {
+    console.error("Failed to load user info", e);
+    return { country: null, currency: null };
+  }
+};
+
+export const setUserInfo = async (
+  country: string,
+  currency: string
+): Promise<void> => {
+  try {
+    await AsyncStorage.setItem("country", country);
+    await AsyncStorage.setItem("currency", currency);
+  } catch (e) {
+    console.error("Failed to save user info", e);
+  }
+};
