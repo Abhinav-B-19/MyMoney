@@ -14,7 +14,7 @@ const UserInfoModal = ({ isVisible, onClose, onSave }) => {
       Alert.alert("Alert", "Please select a currency to save.");
       return;
     }
-    onSave(selectedCountry.value, selectedCurrency.value);
+    onSave(selectedCountry, selectedCurrency);
     onClose();
   };
 

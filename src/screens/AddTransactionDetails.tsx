@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import postNewData from "@/api/postNewData";
 import { COLORS } from "@/constants/colors";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -19,6 +21,8 @@ import updateTransactionData from "@/api/updateTransactionData";
 import Calculator from "@/components/Calculator";
 import { useCategory } from "@/context/CategoryContext";
 import { useAccount } from "@/context/AccountContext";
+import { currencies } from "@/constants/currencies";
+import { useUserContext } from "@/context/UserContext";
 
 interface TransactionDetailsProps {
   initialFormData?: {
@@ -61,6 +65,11 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 
   const [operationInput, setoperationInput] = useState("");
 
+  const { userCurrency } = useUserContext();
+  console.log("userCurrency in ATD: ", userCurrency);
+
+  const [dontAskAgain, setDontAskAgain] = useState(false);
+
   const defaultFormData = {
     userId: authUser,
     title: "",
@@ -79,6 +88,21 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     ...defaultFormData,
     ...mergedInitialFormData,
   });
+
+  useEffect(() => {
+    const loadDontAskAgainPreference = async () => {
+      try {
+        const value = await AsyncStorage.getItem("@dontAskAgain");
+        if (value !== null) {
+          setDontAskAgain(JSON.parse(value));
+        }
+      } catch (error) {
+        console.error("Error loading 'Don't Ask Again' preference:", error);
+      }
+    };
+
+    loadDontAskAgainPreference();
+  }, []);
 
   useEffect(() => {
     const { transactionType, account, title, transactionAmount } = formData;
@@ -104,13 +128,6 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   }, [formData]);
 
   const { contextCategories, setContextCategories } = useCategory();
-
-  // const [accounts, setAccounts] = useState<string[]>([
-  //   "DEBIT CARD",
-  //   "CREDIT CARD",
-  //   "SAVINGS",
-  //   "CASH",
-  // ]);
   const { contextAccounts, setContextAccounts } = useAccount();
 
   const showDatePicker = () => {
@@ -216,11 +233,49 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     });
   };
 
-  const currencies = ["₹", "$", "€", "£", "¥"];
-
-  const handleCurrencySelect = (currency: string) => {
-    setFormData({ ...formData, currency });
-    setIsSelectingVisible(false);
+  const handleCurrencySelect = async (currency: string) => {
+    if (dontAskAgain || currency === userCurrency) {
+      setFormData({ ...formData, currency });
+      setIsSelectingVisible(false);
+    } else {
+      Alert.alert(
+        "Currency Mismatch",
+        `The selected currency (${currency}) is different from your default currency (${userCurrency}). Do you want to continue?`,
+        [
+          {
+            text: "Cancel",
+            onPress: () => setIsSelectingVisible(false),
+            style: "cancel",
+          },
+          {
+            text: "OK",
+            onPress: () => {
+              setFormData({ ...formData, currency });
+              setIsSelectingVisible(false);
+            },
+          },
+          {
+            text: "Don't Ask Again",
+            onPress: async () => {
+              try {
+                await AsyncStorage.setItem(
+                  "@dontAskAgain",
+                  JSON.stringify(true)
+                );
+                setDontAskAgain(true);
+              } catch (error) {
+                console.error(
+                  "Error saving 'Don't Ask Again' preference:",
+                  error
+                );
+              }
+              setFormData({ ...formData, currency });
+              setIsSelectingVisible(false);
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleOutsidePress = () => {
@@ -245,25 +300,33 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   };
 
   const handleOperatorPress = (operator: string) => {
-    // Update the calculator input with the operator
     setCalculatorInput((prevInput) => prevInput + operator);
-    handleChange("transactionAmount", calculatorInput + operator);
-    setoperationInput(operator);
+    setoperationInput(calculatorInput + operator);
   };
 
   const handleEqualPress = () => {
     try {
-      const result = eval(calculatorInput);
-      setCalculatorInput(result.toString());
-      handleChange("transactionAmount", result.toString());
+      // Evaluate the calculator input and update the form data
+      const result = eval(calculatorInput).toString();
+      setCalculatorInput(result);
+      handleChange("transactionAmount", result);
     } catch (error) {
-      console.error("Invalid expression", error);
+      console.error("Error evaluating input:", error);
     }
   };
 
   const handleDeleteLast = () => {
     setCalculatorInput((prevInput) => prevInput.slice(0, -1));
     handleChange("transactionAmount", calculatorInput.slice(0, -1));
+  };
+
+  const handleDontAskAgainReset = async () => {
+    try {
+      await AsyncStorage.removeItem("@dontAskAgain");
+      setDontAskAgain(false);
+    } catch (error) {
+      console.error("Error resetting 'Don't Ask Again' preference:", error);
+    }
   };
 
   return (
@@ -351,34 +414,52 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
           </View>
           <View style={styles.selectContainer}>
             <TouchableOpacity
-              style={styles.selectButton}
+              style={[
+                styles.selectButton,
+                formData.category && styles.selectedButton,
+              ]}
               onPress={() => {
                 setSelectingField("category");
                 setIsSelectingVisible(true);
               }}
             >
-              <Text style={styles.buttonText}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  formData.category && styles.selectedButtonText,
+                ]}
+              >
                 {(formData.category || "Select Category").toUpperCase()}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.selectButton}
+              style={[
+                styles.selectButton,
+                formData.account && styles.selectedButton,
+              ]}
               onPress={() => {
                 setSelectingField("account");
                 setIsSelectingVisible(true);
               }}
             >
-              <Text style={styles.buttonText}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  formData.account && styles.selectedButtonText,
+                ]}
+              >
                 {(formData.account || "Select Account").toUpperCase()}
               </Text>
             </TouchableOpacity>
           </View>
+
           <TextInput
             style={styles.input}
             placeholder="Title"
             onChangeText={(text) => handleChange("title", text)}
             value={formData.title}
             onSubmitEditing={() => Keyboard.dismiss()}
+            autoCapitalize="words"
           />
           <TextInput
             style={styles.input}
@@ -386,6 +467,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
             onChangeText={(text) => handleChange("description", text)}
             value={formData.description}
             onSubmitEditing={() => Keyboard.dismiss()}
+            autoCapitalize="words"
           />
           <View style={styles.splitTransactionContainer}>
             <Text style={styles.label}>Split Transaction:</Text>
@@ -406,6 +488,20 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
                 {formData.isSplitTransaction ? "Yes" : "No"}
               </Text>
             </TouchableOpacity>
+            <View style={styles.resetContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.resetButton,
+                  !dontAskAgain && styles.resetButtonDisabled,
+                ]}
+                onPress={handleDontAskAgainReset}
+                disabled={!dontAskAgain}
+              >
+                <Text style={styles.resetButtonText}>
+                  Reset "Don't Ask Again"
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.amountContainer}>
             <TouchableOpacity
@@ -469,7 +565,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               onPress={showTimePicker}
             >
               <Text style={styles.pickerButtonText}>
-                {formatTime(formData.time)} {/* Use the 'time' state value */}
+                {formatTime(formData.time)}
               </Text>
             </TouchableOpacity>
             <DateTimePickerModal
@@ -516,11 +612,13 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
               {selectingField === "currency" &&
                 currencies.map((currency) => (
                   <TouchableOpacity
-                    key={currency}
+                    key={currency.value}
                     style={styles.selectableItem}
-                    onPress={() => handleCurrencySelect(currency)}
+                    onPress={() => handleCurrencySelect(currency.symbol)}
                   >
-                    <Text style={styles.selectableItemText}>{currency}</Text>
+                    <Text style={styles.selectableItemText}>
+                      {currency.label} ({currency.symbol})
+                    </Text>
                   </TouchableOpacity>
                 ))}
             </View>
@@ -575,6 +673,9 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     color: COLORS.PRIMARY,
+  },
+  selectedButton: {
+    backgroundColor: COLORS.PRIMARY,
   },
   selectedButtonText: {
     color: "#ffffff",
@@ -728,6 +829,22 @@ const styles = StyleSheet.create({
   selectableItemText: {
     fontSize: 16,
     color: COLORS.PRIMARY,
+  },
+  resetContainer: {
+    alignItems: "center",
+    paddingLeft: 10,
+  },
+  resetButton: {
+    backgroundColor: COLORS.SECONDARY,
+    padding: 10,
+    borderRadius: 8,
+  },
+  resetButtonText: {
+    fontSize: 16,
+    color: COLORS.WHITE,
+  },
+  resetButtonDisabled: {
+    backgroundColor: "gray",
   },
 });
 

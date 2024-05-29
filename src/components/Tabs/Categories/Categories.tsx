@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "space-between",
-    paddingBottom: 50,
+    paddingBottom: 35,
   },
   scrollView: {
     borderWidth: 2,

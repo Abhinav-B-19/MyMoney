@@ -203,9 +203,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
         <Text style={styles.additionalContent}>
           Transaction Type: {props.transactionType.toUpperCase()}
         </Text>
-        <Text style={styles.additionalContent}>
-          Account: {props.account.name}
-        </Text>
+        <Text style={styles.additionalContent}>Account: {props.account}</Text>
         <Text style={styles.additionalContent}>Category: {props.category}</Text>
         <Text style={styles.additionalContent}>
           Description: {props.description}
