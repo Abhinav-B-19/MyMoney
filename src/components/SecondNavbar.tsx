@@ -13,6 +13,7 @@ import { ViewModeOptions, ShowTotalOptions } from "@/constants/filterOptions";
 import ViewModeContext from "@/context/ViewModeContext";
 import Picker from "./Picker";
 import { useTotal } from "@/context/TotalContext";
+import { storeModeOptions } from "@/utils/utils";
 
 interface SecondNavbarProps {
   topSectionText: string;
@@ -25,14 +26,9 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
   bottomSectionText,
   onDateChange,
 }) => {
-  const { viewMode, setViewMode } = useContext(ViewModeContext);
+  const { viewMode, setViewMode, showTotal, setShowTotal } =
+    useContext(ViewModeContext);
 
-  const [selectedViewMode, setSelectedViewMode] = useState(
-    Object.values(ViewModeOptions)[0]
-  );
-  const [selectedTotalOption, setSelectedTotalOption] = useState(
-    Object.values(ShowTotalOptions)[0]
-  );
   const [showModal, setShowModal] = useState(false);
   const [date, setDate] = useState(new Date());
 
@@ -40,7 +36,9 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
 
   useEffect(() => {
     console.log("viewMode in sn: ", viewMode);
-  }, []);
+    console.log("showTotal in sn: ", showTotal);
+    storeModeOptions(viewMode, showTotal);
+  }, [viewMode, showTotal]);
 
   const handleDateChange = (newDate: Date) => {
     setDate(newDate);
@@ -56,13 +54,12 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
   };
 
   const handleSelectFilter = (filter: string) => {
-    setSelectedViewMode(filter);
     setViewMode(filter);
     closeModal();
   };
 
   const handleSelectTotalDisplay = (option: boolean) => {
-    setSelectedTotalOption(option);
+    setShowTotal(option);
     closeModal();
   };
 
@@ -101,7 +98,7 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
           <Text style={styles.sectionText}>Income</Text>
           <Text style={styles.incomeTotal}>{incomeTotal}</Text>
         </View>
-        {selectedTotalOption && (
+        {showTotal && (
           <View style={[styles.bottomSectionItem, styles.halfSection]}>
             <Text style={styles.sectionText}>Total</Text>
             <Text style={overallTotal >= 0 ? styles.green : styles.red}>
@@ -119,7 +116,7 @@ const SecondNavbar: React.FC<SecondNavbarProps> = ({
                   onSelectFilter={handleSelectFilter}
                   onSelectTotalDisplay={handleSelectTotalDisplay}
                   selectedViewMode={viewMode}
-                  selectedTotalOption={selectedTotalOption}
+                  selectedTotalOption={showTotal}
                 />
                 <Button onPress={closeModal}>Close</Button>
               </View>

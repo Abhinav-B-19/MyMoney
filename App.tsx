@@ -12,6 +12,7 @@ import NetInfo from "@react-native-community/netinfo";
 import UserInfoModal from "@/components/UserInfoModal";
 import { getUserInfo, setUserInfo } from "@/utils/utils";
 import { UserProvider } from "@/context/UserContext";
+import { ViewModeProvider } from "@/context/ViewModeContext";
 
 const App: React.FC = () => {
   const [isConnected, setIsConnected] = useState(true);
@@ -65,22 +66,24 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <UserProvider>
-        <CategoryProvider>
-          <AccountProvider>
-            <TotalProvider>
-              <Provider store={store}>
-                <PaperProvider>
-                  <AppNavigator />
-                  <UserInfoModal
-                    isVisible={isModalVisible}
-                    onClose={handleModalClose}
-                    onSave={handleUserInfoSave}
-                  />
-                </PaperProvider>
-              </Provider>
-            </TotalProvider>
-          </AccountProvider>
-        </CategoryProvider>
+        <ViewModeProvider>
+          <CategoryProvider>
+            <AccountProvider>
+              <TotalProvider>
+                <Provider store={store}>
+                  <PaperProvider>
+                    <AppNavigator />
+                    <UserInfoModal
+                      isVisible={isModalVisible}
+                      onClose={handleModalClose}
+                      onSave={handleUserInfoSave}
+                    />
+                  </PaperProvider>
+                </Provider>
+              </TotalProvider>
+            </AccountProvider>
+          </CategoryProvider>
+        </ViewModeProvider>
       </UserProvider>
     </AuthProvider>
   );

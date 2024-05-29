@@ -1,5 +1,3 @@
-// utils.ts
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const checkFirstTimeOrLongTime = async (): Promise<void> => {
@@ -62,5 +60,39 @@ export const setUserInfo = async (
     await AsyncStorage.setItem("currency", currency);
   } catch (e) {
     console.error("Failed to save user info", e);
+  }
+};
+
+export const storeModeOptions = async (
+  viewMode?: string,
+  showTotal?: boolean
+) => {
+  try {
+    if (viewMode !== undefined) {
+      await AsyncStorage.setItem("@viewMode", viewMode);
+    }
+    if (showTotal !== undefined) {
+      await AsyncStorage.setItem("@showTotal", JSON.stringify(showTotal));
+    }
+  } catch (error) {
+    console.error("Error storing filter options:", error);
+  }
+};
+
+export const getModeOptions = async (): Promise<{
+  viewMode: string | null;
+  showTotal: boolean | null;
+}> => {
+  try {
+    const viewMode = await AsyncStorage.getItem("@viewMode");
+    const showTotal = await AsyncStorage.getItem("@showTotal");
+
+    return {
+      viewMode: viewMode !== null ? viewMode : null,
+      showTotal: showTotal !== null ? JSON.parse(showTotal) : null,
+    };
+  } catch (error) {
+    console.error("Error retrieving stored mode options:", error);
+    return { viewMode: null, showTotal: null };
   }
 };

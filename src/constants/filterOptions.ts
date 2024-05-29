@@ -1,5 +1,3 @@
-// filterOptions.ts
-
 export const ViewModeOptions = {
   DAILY: "daily",
   WEEKLY: "weekly",
