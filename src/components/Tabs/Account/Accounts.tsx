@@ -266,42 +266,43 @@ const Accounts: React.FC<AccountsProps> = ({
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionHeader}>Overall</Text>
-      <View style={styles.overallSection}>
-        <View style={styles.overallContainer}>
-          <View style={styles.labelValuePairRow}>
-            <View style={styles.labelValuePair}>
-              <Text style={styles.overallLabel}>Expense so far:</Text>
-              <Text style={[styles.overallValue, { color: "red" }]}>
-                ${totalExpense}
-              </Text>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.container}>
+        <Text style={styles.sectionHeader}>Overall</Text>
+        <View style={styles.overallSection}>
+          <View style={styles.overallContainer}>
+            <View style={styles.labelValuePairRow}>
+              <View style={styles.labelValuePair}>
+                <Text style={styles.overallLabel}>Expense so far:</Text>
+                <Text style={[styles.overallValue, { color: "red" }]}>
+                  ${totalExpense}
+                </Text>
+              </View>
+              <View style={styles.verticalLine} />
+              <View style={styles.labelValuePair}>
+                <Text style={styles.overallLabel}>Income so far:</Text>
+                <Text style={[styles.overallValue, { color: "green" }]}>
+                  ${totalIncome}
+                </Text>
+              </View>
             </View>
-            <View style={styles.verticalLine} />
-            <View style={styles.labelValuePair}>
-              <Text style={styles.overallLabel}>Income so far:</Text>
-              <Text style={[styles.overallValue, { color: "green" }]}>
-                ${totalIncome}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.horizontalLine} />
-          <View style={styles.overallItem}>
-            <View style={styles.labelValuePair}>
-              <Text style={styles.overallLabel}>Total balance:</Text>
-              <Text
-                style={[
-                  styles.overallValue,
-                  { color: totalBalance < 0 ? "red" : "green" },
-                ]}
-              >
-                ${totalBalance}
-              </Text>
+            <View style={styles.horizontalLine} />
+            <View style={styles.overallItem}>
+              <View style={styles.labelValuePair}>
+                <Text style={styles.overallLabel}>Total balance:</Text>
+                <Text
+                  style={[
+                    styles.overallValue,
+                    { color: totalBalance < 0 ? "red" : "green" },
+                  ]}
+                >
+                  ${totalBalance}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+
         <View style={styles.accountSection}>
           <Text style={styles.sectionHeader}>Accounts</Text>
           {contextAccounts.map((account) => (
@@ -317,111 +318,114 @@ const Accounts: React.FC<AccountsProps> = ({
         <TouchableOpacity style={styles.addButton} onPress={handleAddAccount}>
           <Text style={styles.addButtonText}>ADD NEW ACCOUNT</Text>
         </TouchableOpacity>
-      </ScrollView>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable
-          style={styles.overlay}
-          onPress={() => setModalVisible(false)}
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.keyboardAvoidingView}
+          <Pressable
+            style={styles.overlay}
+            onPress={() => setModalVisible(false)}
           >
-            <View style={styles.modalContainer}>
-              <Pressable
-                onPress={(e) => {
-                  if (e.target === e.currentTarget) {
-                    setModalVisible(false);
-                  }
-                }}
-              >
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Add New Account</Text>
-                  <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Initial amount</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      value={String(newAccount.balance)} // Convert to string to display negative numbers properly
-                      placeholder="0"
-                      onChangeText={(text) =>
-                        setNewAccount({
-                          ...newAccount,
-                          balance: parseFloat(text) || 0, // Parse float to handle negative numbers
-                        })
-                      }
-                      keyboardType="numeric"
-                    />
-                  </View>
-                  <Text style={styles.messageText}>
-                    *Initial amount will not be reflected in analysis.
-                  </Text>
-                  <View style={styles.inputContainerRow}>
-                    <Text style={styles.inputLabel}>Name</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      value={newAccount.name}
-                      onChangeText={(text) =>
-                        setNewAccount({ ...newAccount, name: text })
-                      }
-                    />
-                  </View>
-                  <View style={styles.iconContainerRow}>
-                    <Text style={styles.inputLabel}>Icon </Text>
-                    <ScrollView
-                      horizontal
-                      contentContainerStyle={styles.iconScrollContainer}
-                      style={styles.iconScrollView}
-                    >
-                      {icons.map((icon) => (
-                        <TouchableOpacity
-                          key={icon}
-                          style={[
-                            styles.iconContainer,
-                            newAccount.icon === icon &&
-                              styles.iconContainerActive,
-                          ]}
-                          onPress={() => setNewAccount({ ...newAccount, icon })}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.keyboardAvoidingView}
+            >
+              <View style={styles.modalContainer}>
+                <Pressable
+                  onPress={(e) => {
+                    if (e.target === e.currentTarget) {
+                      setModalVisible(false);
+                    }
+                  }}
+                >
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Add New Account</Text>
+                    <View style={styles.inputContainerRow}>
+                      <Text style={styles.inputLabel}>Initial amount</Text>
+                      <TextInput
+                        style={styles.textInput}
+                        value={String(newAccount.balance)} // Convert to string to display negative numbers properly
+                        placeholder="0"
+                        onChangeText={(text) =>
+                          setNewAccount({
+                            ...newAccount,
+                            balance: parseFloat(text) || 0, // Parse float to handle negative numbers
+                          })
+                        }
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <Text style={styles.messageText}>
+                      *Initial amount will not be reflected in analysis.
+                    </Text>
+                    <View style={styles.inputContainerRow}>
+                      <Text style={styles.inputLabel}>Name</Text>
+                      <TextInput
+                        style={styles.textInput}
+                        value={newAccount.name}
+                        onChangeText={(text) =>
+                          setNewAccount({ ...newAccount, name: text })
+                        }
+                      />
+                    </View>
+                    <View style={styles.iconContainerRow}>
+                      <Text style={styles.inputLabel}>Icon </Text>
+                      <ScrollView horizontal style={styles.iconScrollView}>
+                        {icons.map((icon) => (
+                          <TouchableOpacity
+                            key={icon}
+                            style={[
+                              styles.iconContainer,
+                              newAccount.icon === icon &&
+                                styles.iconContainerActive,
+                            ]}
+                            onPress={() =>
+                              setNewAccount({ ...newAccount, icon })
+                            }
+                          >
+                            <MaterialIcons
+                              name={icon}
+                              size={24}
+                              color="black"
+                            />
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                    <View style={styles.buttonRow}>
+                      <Pressable
+                        style={[styles.button, styles.buttonClose]}
+                        onPress={() => setModalVisible(false)}
+                      >
+                        <Text style={styles.textStyle}>Cancel</Text>
+                      </Pressable>
+                      {isEditMode ? (
+                        <Pressable
+                          style={[styles.button, styles.buttonUpdate]}
+                          onPress={handleUpdateAccount}
                         >
-                          <MaterialIcons name={icon} size={24} color="black" />
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+                          <Text style={styles.textStyle}>Update</Text>
+                        </Pressable>
+                      ) : (
+                        <Pressable
+                          style={[styles.button, styles.buttonSave]}
+                          onPress={handleSaveAccount}
+                        >
+                          <Text style={styles.textStyle}>Save</Text>
+                        </Pressable>
+                      )}
+                    </View>
                   </View>
-                  <View style={styles.buttonRow}>
-                    <Pressable
-                      style={[styles.button, styles.buttonClose]}
-                      onPress={() => setModalVisible(false)}
-                    >
-                      <Text style={styles.textStyle}>Cancel</Text>
-                    </Pressable>
-                    {isEditMode ? (
-                      <Pressable
-                        style={[styles.button, styles.buttonUpdate]}
-                        onPress={handleUpdateAccount}
-                      >
-                        <Text style={styles.textStyle}>Update</Text>
-                      </Pressable>
-                    ) : (
-                      <Pressable
-                        style={[styles.button, styles.buttonSave]}
-                        onPress={handleSaveAccount}
-                      >
-                        <Text style={styles.textStyle}>Save</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                </View>
-              </Pressable>
-            </View>
-          </KeyboardAvoidingView>
-        </Pressable>
-      </Modal>
-    </View>
+                </Pressable>
+              </View>
+            </KeyboardAvoidingView>
+          </Pressable>
+        </Modal>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -431,6 +435,14 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#f0f0f0",
     borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   sectionHeader: {
     fontSize: 18,
@@ -520,7 +532,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   addButton: {
-    position: "absolute",
+    position: "relative",
     bottom: 5,
     alignSelf: "center",
     backgroundColor: "#2196F3",

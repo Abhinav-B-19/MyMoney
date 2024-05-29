@@ -124,7 +124,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         </View>
       </View>
       <TouchableOpacity onPress={handleOpenDropdown}>
-        <MaterialIcons name="more-vert" size={24} color="black" />
+        <MaterialIcons name="more-horiz" size={24} color="black" />
       </TouchableOpacity>
       <Modal
         visible={isDropdownVisible}
