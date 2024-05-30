@@ -184,9 +184,18 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const updatedFormData = { ...formData };
-      await postNewData("transactions", updatedFormData);
-      handleBack();
+      if (isNaN(formData.transactionAmount)) {
+        // handleEqualPress();
+        Alert.alert(
+          "Invalid Transaction Amount",
+          "Please calculate the amount before continuing.",
+          [{ text: "OK" }]
+        );
+      } else {
+        const updatedFormData = { ...formData };
+        await postNewData("transactions", updatedFormData);
+        handleBack();
+      }
     } catch (error) {
       console.error("Error posting data:", error);
     } finally {
@@ -197,14 +206,20 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const handleUpdate = async () => {
     setIsLoading(true);
     try {
-      const transactionType =
-        formData.transactionType === "Income" ? "Income" : "Expense";
+      if (isNaN(formData.transactionAmount)) {
+        // handleEqualPress();
+        Alert.alert(
+          "Invalid Transaction Amount",
+          "Please calculate the amount before continuing.",
+          [{ text: "OK" }]
+        );
+      } else {
+        const updatedFormData = { ...formData };
+        const id = updatedFormData.id;
 
-      const updatedFormData = { ...formData, transactionType };
-      const id = updatedFormData.id;
-
-      await updateTransactionData("transactions", id, updatedFormData);
-      handleBack();
+        await updateTransactionData("transactions", id, updatedFormData);
+        handleBack();
+      }
     } catch (error) {
       console.error("Error saving data:", error);
     } finally {
@@ -313,6 +328,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const handleOperatorPress = (operator: string) => {
     setCalculatorInput((prevInput) => prevInput + operator);
     setoperationInput(calculatorInput + operator);
+    handleChange("transactionAmount", calculatorInput + operator);
   };
 
   const handleEqualPress = () => {
