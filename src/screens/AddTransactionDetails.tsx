@@ -34,6 +34,7 @@ interface TransactionDetailsProps {
     transactionType?: string;
     currency?: string;
     account?: string;
+    toAccount?: string;
     category?: string;
     isSplitTransaction?: boolean;
   };
@@ -66,7 +67,6 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   const [operationInput, setoperationInput] = useState("");
 
   const { userCurrency } = useUserContext();
-  console.log("userCurrency in ATD: ", userCurrency);
 
   const [dontAskAgain, setDontAskAgain] = useState(false);
 
@@ -80,6 +80,7 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     transactionType: "Expense",
     currency: "\u20B9",
     account: "",
+    toAccount: "",
     category: "",
     isSplitTransaction: false,
   };
@@ -105,13 +106,22 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
   }, []);
 
   useEffect(() => {
-    const { transactionType, account, title, transactionAmount } = formData;
-    const disabled = !(
-      transactionType &&
-      account &&
-      title &&
-      transactionAmount
-    );
+    const { transactionType, account, toAccount, title, transactionAmount } =
+      formData;
+    let disabled = false;
+
+    if (transactionType === "Transfer") {
+      disabled = !(
+        transactionType &&
+        account &&
+        toAccount &&
+        title &&
+        transactionAmount
+      );
+    } else {
+      disabled = !(transactionType && account && title && transactionAmount);
+    }
+
     setSubmitDisabled(disabled);
   }, [formData]);
 
@@ -173,12 +183,8 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
 
   const handleSave = async () => {
     setIsLoading(true);
-    const transactionType =
-      formData.transactionType === "Income" ? "Income" : "Expense";
-
-    const updatedFormData = { ...formData, transactionType };
-
     try {
+      const updatedFormData = { ...formData };
       await postNewData("transactions", updatedFormData);
       handleBack();
     } catch (error) {
@@ -216,13 +222,18 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     setIsSelectingVisible(false);
   };
 
-  const handleAccountSelect = (account: string) => {
+  const handleAccountSelect = (account: string, field: string) => {
     Keyboard.dismiss(); // Dismiss the keyboard
-    setFormData({ ...formData, account });
+    if (field === "account") {
+      setFormData({ ...formData, account: account });
+    } else if (field === "toAccount") {
+      setFormData({ ...formData, toAccount: account });
+    }
     setIsSelectingVisible(false);
   };
 
   const handleTransactionTypeSelect = (transactionType: string) => {
+    console.log(transactionType);
     setFormData({ ...formData, transactionType });
   };
 
@@ -396,15 +407,15 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
             <TouchableOpacity
               style={[
                 styles.transactionTypeButton,
-                formData.transactionType === "transfer" &&
+                formData.transactionType === "Transfer" &&
                   styles.selectedTransactionTypeButton,
               ]}
-              onPress={() => handleTransactionTypeSelect("transfer")}
+              onPress={() => handleTransactionTypeSelect("Transfer")}
             >
               <Text
                 style={[
                   styles.buttonText,
-                  formData.transactionType === "transfer" &&
+                  formData.transactionType === "Transfer" &&
                     styles.selectedButtonText,
                 ]}
               >
@@ -413,44 +424,82 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
             </TouchableOpacity>
           </View>
           <View style={styles.selectContainer}>
-            <TouchableOpacity
-              style={[
-                styles.selectButton,
-                formData.category && styles.selectedButton,
-              ]}
-              onPress={() => {
-                setSelectingField("category");
-                setIsSelectingVisible(true);
-              }}
-            >
-              <Text
-                style={[
-                  styles.buttonText,
-                  formData.category && styles.selectedButtonText,
-                ]}
-              >
-                {(formData.category || "Select Category").toUpperCase()}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>
+                {formData.transactionType === "Transfer"
+                  ? "From Account"
+                  : "Account"}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.selectButton,
-                formData.account && styles.selectedButton,
-              ]}
-              onPress={() => {
-                setSelectingField("account");
-                setIsSelectingVisible(true);
-              }}
-            >
-              <Text
+              <TouchableOpacity
                 style={[
-                  styles.buttonText,
-                  formData.account && styles.selectedButtonText,
+                  styles.selectButton,
+                  formData.account && styles.selectedButton,
                 ]}
+                onPress={() => {
+                  setSelectingField("account");
+                  setIsSelectingVisible(true);
+                }}
               >
-                {(formData.account || "Select Account").toUpperCase()}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    formData.account && styles.selectedButtonText,
+                  ]}
+                >
+                  {(formData.account || "Select1Account").toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {formData.transactionType !== "Transfer" && (
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Category</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.selectButton,
+                    formData.category && styles.selectedButton,
+                  ]}
+                  onPress={() => {
+                    setSelectingField("category");
+                    setIsSelectingVisible(true);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      formData.category && styles.selectedButtonText,
+                    ]}
+                  >
+                    {(formData.category || "Select Category").toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {formData.transactionType === "Transfer" && (
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>To Account</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.selectButton,
+                    formData.toAccount && styles.selectedButton,
+                  ]}
+                  onPress={() => {
+                    setSelectingField("toAccount");
+                    setIsSelectingVisible(true);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      formData.toAccount && styles.selectedButtonText,
+                    ]}
+                  >
+                    {(formData.toAccount || "Select2Account").toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <TextInput
@@ -596,19 +645,32 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
                   )
                 )}
               {selectingField === "account" &&
-                contextAccounts.map((account) =>
-                  account.isIgnored ? null : (
-                    <TouchableOpacity
-                      key={account.id}
-                      style={styles.selectableItem}
-                      onPress={() => handleAccountSelect(account.name)}
-                    >
-                      <Text style={styles.selectableItemText}>
-                        {account.name}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-                )}
+                contextAccounts.map((account) => (
+                  <TouchableOpacity
+                    key={account.id}
+                    style={styles.selectableItem}
+                    onPress={() => handleAccountSelect(account.name, "account")}
+                  >
+                    <Text style={styles.selectableItemText}>
+                      {account.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+              {selectingField === "toAccount" &&
+                contextAccounts.map((account) => (
+                  <TouchableOpacity
+                    key={account.id}
+                    style={styles.selectableItem}
+                    onPress={() =>
+                      handleAccountSelect(account.name, "toAccount")
+                    }
+                  >
+                    <Text style={styles.selectableItemText}>
+                      {account.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               {selectingField === "currency" &&
                 currencies.map((currency) => (
                   <TouchableOpacity
@@ -638,7 +700,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
     paddingTop: 20,
     justifyContent: "space-between",
   },
@@ -656,7 +718,7 @@ const styles = StyleSheet.create({
   transactionTypeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   transactionTypeButton: {
     flex: 1,
@@ -671,7 +733,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.PRIMARY,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.PRIMARY,
   },
   selectedButton: {
@@ -680,33 +742,51 @@ const styles = StyleSheet.create({
   selectedButtonText: {
     color: "#ffffff",
   },
-  selectContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
+  // selectContainer: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  //   marginBottom: 15,
+  //   backgroundColor: "gray",
+  // },
   dateAndTimeContainer: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    marginBottom: 20,
+    marginBottom: 15,
     padding: 5,
   },
 
-  selectButton: {
+  // fieldContainer: {
+  //   flex: 1,
+  //   justifyContent: "space-evenly",
+  //   height: 60,
+  //   alignItems: "center",
+  // },
+  selectContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  fieldContainer: {
     flex: 1,
-    paddingVertical: 10,
+    alignItems: "center",
+  },
+  selectButton: {
+    flexGrow: 1,
     marginHorizontal: 5,
+    padding: 10,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: COLORS.PRIMARY,
     alignItems: "center",
+    justifyContent: "center",
+    width: "90%",
   },
   input: {
     borderWidth: 1,
     borderColor: COLORS.PRIMARY,
     borderRadius: 5,
     padding: 10,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   pickerButton: {
     paddingVertical: 10,
@@ -715,11 +795,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.PRIMARY,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
     marginRight: 10,
   },
   pickerButtonText: {
-    fontSize: 16,
+    fontSize: 13,
+    padding: 1,
     color: COLORS.PRIMARY,
   },
   amountContainer: {
@@ -776,6 +857,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginRight: 8,
+    paddingBottom: 5,
   },
   toggleButton: {
     borderWidth: 1,

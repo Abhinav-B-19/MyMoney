@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons"; // Import the required icons
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import carIcon from "../../assets/Category/car.png";
 import entertainmentIcon from "../../assets/Category/entertainment.png";
 import fitnessIcon from "../../assets/Category/fitness.png";
@@ -17,7 +17,9 @@ import medicalIcon from "../../assets/Category/medical.png";
 import shoppingIcon from "../../assets/Category/shopping.png";
 import travelIcon from "../../assets/Category/travel.png";
 import emptyIcon from "../../assets/Category/empty.png";
+import transferIcon from "../../assets/Category/transfer.png";
 import updateTransactionData from "@/api/updateTransactionData";
+import { COLORS } from "@/constants/colors";
 
 interface TaskViewProps {
   userId: string;
@@ -28,6 +30,7 @@ interface TaskViewProps {
   transactionAmount: number;
   currency: string;
   account: string;
+  toAccount: string;
   category: string;
   transactionType: string;
   isSplitTransaction: boolean;
@@ -74,6 +77,7 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
               transactionType: props.transactionType,
               currency: props.currency,
               account: props.account,
+              toAccount: props.toAccount,
               category: props.category,
               isSplitTransaction: !isSplitTransaction,
             };
@@ -89,13 +93,25 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
     );
   };
 
+  const imageSource =
+    props.transactionType === "Transfer"
+      ? transferIcon
+      : categoryImages[props.category] || emptyIcon;
+
+  const amountSign =
+    props.transactionType === "Expense"
+      ? "-"
+      : props.transactionType === "Income"
+      ? "+"
+      : "";
+
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.item}>
         <View style={styles.itemContent}>
           <View style={styles.circle}>
             <Image
-              source={categoryImages[props.category] || emptyIcon}
+              source={imageSource}
               style={styles.image}
               accessibilityLabel={props.category}
             />
@@ -104,35 +120,39 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
             <Text style={styles.itemText} numberOfLines={2}>
               {props.title}
             </Text>
+          </View>
+          <View style={styles.amountAndIconContainer}>
             <View style={styles.amountContainer}>
               <Text
                 style={[
                   styles.amountText,
                   {
                     color:
-                      props.transactionType === "Expense"
+                      props.transactionType === "Transfer"
+                        ? COLORS.ACCENT
+                        : props.transactionType === "Expense"
                         ? "#FF6347"
                         : "#32CD32",
                   },
                 ]}
               >
-                {props.transactionType === "Expense" ? "-" : "+"}{" "}
+                {amountSign}
                 {props.currency} {Math.abs(props.transactionAmount)}
               </Text>
             </View>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleToggleSplitTransaction}
+            >
+              <View style={styles.iconBackground}>
+                {isSplitTransaction ? (
+                  <FontAwesome name="group" size={20} color="#00008B" />
+                ) : (
+                  <FontAwesome5 name="user" size={20} color="#00008B" />
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={handleToggleSplitTransaction}
-          >
-            <View style={styles.iconBackground}>
-              {isSplitTransaction ? (
-                <FontAwesome name="group" size={20} color="#00008B" />
-              ) : (
-                <FontAwesome5 name="user" size={20} color="#00008B" />
-              )}
-            </View>
-          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -158,16 +178,19 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     marginLeft: 10,
+    marginRight: 10,
   },
   itemText: {
     fontSize: 16,
     marginBottom: 5,
   },
+  amountAndIconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   amountContainer: {
     flexDirection: "row",
     alignItems: "center",
-    position: "absolute",
-    right: 15,
   },
   currency: {
     fontSize: 14,
@@ -178,12 +201,14 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 16,
     fontWeight: "bold",
+    marginRight: 10,
   },
   circle: {
-    width: 50,
-    height: 50,
+    width: 45,
+    height: 45,
     borderRadius: 25,
-    backgroundColor: "lightgray",
+    borderWidth: 2,
+    borderColor: COLORS.ACCENT,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -193,10 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   iconButton: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -20 }, { translateY: -20 }], // Center the icon container
+    marginLeft: 10,
   },
   iconBackground: {
     width: 40,

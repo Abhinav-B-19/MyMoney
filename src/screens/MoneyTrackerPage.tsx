@@ -224,6 +224,7 @@ const MoneyTrackerPage: React.FC = () => {
                   transactionAmount={item.transactionAmount}
                   currency={item.currency}
                   account={item.account}
+                  toAccount={item.toAccount}
                   isSplitTransaction={item.isSplitTransaction}
                 />
               )}

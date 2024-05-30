@@ -21,7 +21,8 @@ export interface EditTaskViewPopOverProps {
   date: string;
   transactionAmount: number;
   currency: string;
-  account: string;
+  account?: string;
+  toAccount?: string;
   category: string;
   transactionType: string;
   isSplitTransaction: boolean; // New prop for indicating split transaction
@@ -83,6 +84,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
         transactionType: props.transactionType,
         currency: props.currency,
         account: props.account,
+        toAccount: props.toAccount,
         category: props.category,
         isSplitTransaction: props.isSplitTransaction,
       },
@@ -123,6 +125,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
                   transactionType: props.transactionType,
                   currency: props.currency,
                   account: props.account,
+                  toAccount: props.toAccount,
                   category: props.category,
                   isSplitTransaction: !isSplitTransaction, // Toggle the value
                 };
@@ -171,11 +174,20 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
                 styles.amountText,
                 {
                   color:
-                    props.transactionType === "Expense" ? "#FF6347" : "#32CD32",
+                    props.transactionType === "Expense"
+                      ? "#FF6347"
+                      : props.transactionType === "Transfer"
+                      ? COLORS.ACCENT // Adjusted color for Transfer
+                      : "#32CD32",
                 },
               ]}
             >
-              {props.transactionType === "Expense" ? "-" : "+"} {props.currency}
+              {props.transactionType === "Expense"
+                ? "-"
+                : props.transactionType === "Transfer"
+                ? ""
+                : "+"}{" "}
+              {props.currency}
               {Math.abs(props.transactionAmount)}
             </Text>
           </View>
@@ -184,7 +196,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
           <View style={styles.iconButton}>
             <IconButton
               icon="pencil"
-              size={18} // Decreased icon size
+              size={18}
               onPress={handleEdit}
               testID="editButton"
             />
@@ -192,7 +204,7 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
           <View style={styles.iconButton}>
             <IconButton
               icon="trash-can"
-              size={18} // Decreased icon size
+              size={18}
               onPress={handleDelete}
               testID="deleteButton"
             />
@@ -201,10 +213,20 @@ const EditTaskViewPopOver: React.FC<EditTaskViewPopOverProps> = (props) => {
       </View>
       <ScrollView style={styles.expandedView}>
         <Text style={styles.additionalContent}>
-          Transaction Type: {props.transactionType.toUpperCase()}
+          Transaction Type: {props.transactionType?.toUpperCase()}
         </Text>
-        <Text style={styles.additionalContent}>Account: {props.account}</Text>
-        <Text style={styles.additionalContent}>Category: {props.category}</Text>
+        <Text style={styles.additionalContent}>
+          account: {props.account?.toUpperCase()}
+        </Text>
+        {props.transactionType === "Transfer" ? (
+          <Text style={styles.additionalContent}>
+            To Account: {props.toAccount?.toUpperCase()}
+          </Text>
+        ) : (
+          <Text style={styles.additionalContent}>
+            Category: {props.category?.toUpperCase()}
+          </Text>
+        )}
         <Text style={styles.additionalContent}>
           Description: {props.description}
         </Text>
