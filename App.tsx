@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { TotalProvider } from "@/context/TotalContext";
 import { CategoryProvider } from "@/context/CategoryContext";
 import { AccountProvider } from "@/context/AccountContext";
+import { TransactionProvider } from "@/context/TransactionContext";
 import NetInfo from "@react-native-community/netinfo";
 import UserInfoModal from "@/components/UserInfoModal";
 import { getUserInfo, setUserInfo } from "@/utils/utils";
@@ -66,24 +67,26 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <UserProvider>
-        <ViewModeProvider>
-          <CategoryProvider>
-            <AccountProvider>
-              <TotalProvider>
-                <Provider store={store}>
-                  <PaperProvider>
-                    <AppNavigator />
-                    <UserInfoModal
-                      isVisible={isModalVisible}
-                      onClose={handleModalClose}
-                      onSave={handleUserInfoSave}
-                    />
-                  </PaperProvider>
-                </Provider>
-              </TotalProvider>
-            </AccountProvider>
-          </CategoryProvider>
-        </ViewModeProvider>
+        <TransactionProvider>
+          <ViewModeProvider>
+            <CategoryProvider>
+              <AccountProvider>
+                <TotalProvider>
+                  <Provider store={store}>
+                    <PaperProvider>
+                      <AppNavigator />
+                      <UserInfoModal
+                        isVisible={isModalVisible}
+                        onClose={handleModalClose}
+                        onSave={handleUserInfoSave}
+                      />
+                    </PaperProvider>
+                  </Provider>
+                </TotalProvider>
+              </AccountProvider>
+            </CategoryProvider>
+          </ViewModeProvider>
+        </TransactionProvider>
       </UserProvider>
     </AuthProvider>
   );

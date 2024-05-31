@@ -30,6 +30,7 @@ import { COLORS } from "@/constants/colors";
 import moment from "moment";
 import NoTransactionPage from "@/components/NoTransactionPage";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTransaction } from "@/context/TransactionContext";
 
 const MoneyTrackerPage: React.FC = () => {
   const [selectedTracker, setSelectedTracker] =
@@ -45,6 +46,7 @@ const MoneyTrackerPage: React.FC = () => {
   const [initialDataFetched, setInitialDataFetched] = useState(false);
   const { authUser, setAuthUser } = useAuth();
   const { setExpenseTotal, setIncomeTotal, setOverallTotal } = useTotal();
+  const { transactionsContext, setTransactionsContext } = useTransaction();
 
   useEffect(() => {
     handleDateChangeAndUpdate(selectedDate);
@@ -89,6 +91,7 @@ const MoneyTrackerPage: React.FC = () => {
       const response = await fetchDataApi("transactions", authUser);
       if (response.status === 200 || response.status === 201) {
         setCollection(response.data);
+        setTransactionsContext(response.data);
         setIsLoading(false);
         setInitialDataFetched(true);
       } else {
