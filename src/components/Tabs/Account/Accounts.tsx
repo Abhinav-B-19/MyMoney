@@ -67,6 +67,16 @@ const Accounts: React.FC<AccountsProps> = ({
     useCallback(() => {
       console.log("Accounts is focused");
       setIsAccountsScreenFocused(true);
+      const initialBalances = {};
+      // Iterate over contextAccounts and populate initialBalances
+      contextAccounts.forEach((account) => {
+        initialBalances[account.name] = account.balance;
+        console.log(initialBalances);
+      });
+      // Set the initial balances for accountBalance
+      // setAccountBalances(initialBalances);
+
+      // console.log("initial accountBalances: ", accountBalances);
 
       return () => {
         console.log("Accounts is unfocused");
@@ -87,37 +97,30 @@ const Accounts: React.FC<AccountsProps> = ({
     fetchingDataApi();
   }, []);
 
-  // const separateTransactionsByAccount = () => {
-  //   const separated = contextAccounts.reduce((acc, account) => {
-  //     acc[account.name] = transactionsContext.filter(
-  //       (transaction) => transaction.account === account.name
-  //     );
-  //     return acc;
-  //   }, {});
-  //   return separated;
-  // };
   const calculateBalances = () => {
-    const initialBalances = contextAccounts.reduce((acc, account) => {
-      acc[account.name] = 0;
-      return acc;
-    }, {});
+    // Initialize the balances for each account
+    const initialBalances = {};
 
-    transactionsContext.forEach((transaction) => {
-      const amount = parseFloat(transaction.transactionAmount);
+    // Process each transaction
+    transactionsContext
+      .filter((transaction) => transaction.userId === authUser)
+      .forEach((transaction) => {
+        const amount = parseFloat(transaction.transactionAmount);
 
-      if (transaction.transactionType.toLowerCase() === "expense") {
-        console.log(transaction, transaction.transactionType, amount);
-
-        initialBalances[transaction.account] -= amount;
-      } else if (transaction.transactionType.toLowerCase() === "Income") {
-        initialBalances[transaction.account] += amount;
-      } else if (transaction.transactionType.toLowerCase() === "Transfer") {
-        initialBalances[transaction.account] -= amount;
-        if (initialBalances[transaction.toAccount] !== undefined) {
-          initialBalances[transaction.toAccount] += amount;
+        // Update balances based on transaction type
+        if (transaction.transactionType.toLowerCase() === "expense") {
+          initialBalances[transaction.account] =
+            (initialBalances[transaction.account] || 0) - amount;
+        } else if (transaction.transactionType.toLowerCase() === "income") {
+          initialBalances[transaction.account] =
+            (initialBalances[transaction.account] || 0) + amount;
+        } else if (transaction.transactionType.toLowerCase() === "transfer") {
+          initialBalances[transaction.account] =
+            (initialBalances[transaction.account] || 0) - amount;
+          initialBalances[transaction.toAccount] =
+            (initialBalances[transaction.toAccount] || 0) + amount;
         }
-      }
-    });
+      });
 
     return initialBalances;
   };
@@ -381,6 +384,7 @@ const Accounts: React.FC<AccountsProps> = ({
             <AccountCard
               key={account.id}
               account={account}
+              accountBalance={accountBalances[account.name]}
               onDeleteSuccess={handleDeleteSuccess}
               onEditPress={handleEditAccount}
               onIgnorePress={handleIgnoreAccount}

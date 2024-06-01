@@ -22,6 +22,7 @@ interface Account {
 
 interface AccountCardProps {
   account: Account;
+  accountBalance: number;
   onDeleteSuccess: () => void;
   onEditPress: (accountId: string) => void;
   onIgnorePress: (accountId: string) => void;
@@ -29,6 +30,7 @@ interface AccountCardProps {
 
 const AccountCard: React.FC<AccountCardProps> = ({
   account,
+  accountBalance,
   onDeleteSuccess,
   onEditPress,
   onIgnorePress,
@@ -36,10 +38,10 @@ const AccountCard: React.FC<AccountCardProps> = ({
   const { id, name, userId, balance, icon, isIgnored } = account;
 
   // Determine the color based on the balance value
-  const balanceColor = balance < 0 ? "red" : "green";
+  const balanceColor = accountBalance < 0 ? "red" : "green";
 
   // Determine whether to show plus or minus
-  const sign = balance >= 0 ? "+" : "-";
+  const sign = accountBalance >= 0 ? "+" : "-";
 
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
@@ -119,7 +121,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceLabel}>Balance:</Text>
           <Text style={[styles.balanceAmount, { color: balanceColor }]}>
-            {`${sign} $${Math.abs(balance)}`}
+            {` ${sign} $${Math.abs(accountBalance)}`}
           </Text>
         </View>
       </View>
