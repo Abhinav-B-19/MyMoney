@@ -242,7 +242,18 @@ const AddTransactionDetails: React.FC<TransactionDetailsProps> = ({
     if (field === "account") {
       setFormData({ ...formData, account: account });
     } else if (field === "toAccount") {
-      setFormData({ ...formData, toAccount: account });
+      if (account === formData.account) {
+        // If the selected "to" account is the same as the "from" account
+        // Show an alert and don't set the formData
+        Alert.alert(
+          "Invalid Selection",
+          "The 'to' account cannot be the same as the 'from' account."
+        );
+      } else {
+        // If the selected "to" account is different from the "from" account
+        // Set the formData
+        setFormData({ ...formData, toAccount: account });
+      }
     }
     setIsSelectingVisible(false);
   };

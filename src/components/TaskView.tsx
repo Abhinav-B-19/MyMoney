@@ -108,8 +108,8 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={styles.item}>
-        <View style={styles.itemContent}>
-          <View style={styles.circle}>
+        <View style={styles.contentContainer}>
+          <View style={styles.iconContainer}>
             <Image
               source={imageSource}
               style={styles.image}
@@ -117,34 +117,56 @@ const TrackerView: React.FC<TaskViewProps> = ({ onPress, ...props }) => {
             />
           </View>
           <View style={styles.textContainer}>
-            <Text style={styles.itemText} numberOfLines={2}>
+            <Text style={styles.titleText} numberOfLines={2}>
               {props.title}
             </Text>
+            {props.transactionType === "Income" ||
+            props.transactionType === "Expense" ? (
+              <View style={styles.accountContainer}>
+                <Image
+                  source={transferIcon}
+                  style={styles.logoImage}
+                  accessibilityLabel={
+                    props.transactionType === "Income" ? "Income" : "Expense"
+                  }
+                />
+                <Text style={styles.accountText}>{props.account}</Text>
+              </View>
+            ) : (
+              <View style={styles.accountContainer}>
+                <Image
+                  source={transferIcon}
+                  style={styles.logoImage}
+                  accessibilityLabel="Transfer"
+                />
+                <Text style={styles.accountText}>
+                  {props.account} → {props.toAccount}
+                </Text>
+              </View>
+            )}
           </View>
-          <View style={styles.amountAndIconContainer}>
-            <View style={styles.amountContainer}>
-              <Text
-                style={[
-                  styles.amountText,
-                  {
-                    color:
-                      props.transactionType === "Transfer"
-                        ? COLORS.ACCENT
-                        : props.transactionType === "Expense"
-                        ? "#FF6347"
-                        : "#32CD32",
-                  },
-                ]}
-              >
-                {amountSign}
-                {props.currency} {Math.abs(props.transactionAmount)}
-              </Text>
-            </View>
+          <View style={styles.amountContainer}>
+            <Text
+              style={[
+                styles.amountText,
+                {
+                  color:
+                    props.transactionType === "Transfer"
+                      ? COLORS.ACCENT
+                      : props.transactionType === "Expense"
+                      ? "#FF6347"
+                      : "#32CD32",
+                },
+              ]}
+            >
+              {amountSign} {props.currency}
+              {Math.abs(props.transactionAmount)}
+            </Text>
             <TouchableOpacity
-              style={styles.iconButton}
+              style={styles.toggleButton}
               onPress={handleToggleSplitTransaction}
             >
-              <View style={styles.iconBackground}>
+              <View style={styles.toggleIcon}>
                 {isSplitTransaction ? (
                   <FontAwesome name="group" size={20} color="#00008B" />
                 ) : (
@@ -170,42 +192,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 10,
     position: "relative",
   },
-  itemContent: {
+  contentContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  textContainer: {
-    flex: 1,
-    marginLeft: 10,
-    marginRight: 10,
-  },
-  itemText: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  amountAndIconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  amountContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  currency: {
-    fontSize: 14,
-    marginRight: 10,
-    fontWeight: "bold",
-    color: "#666",
-  },
-  amountText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 10,
-  },
-  circle: {
-    width: 45,
-    height: 45,
+  iconContainer: {
+    width: 50,
+    height: 50,
     borderRadius: 25,
     borderWidth: 2,
     borderColor: COLORS.ACCENT,
@@ -217,10 +211,41 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
   },
-  iconButton: {
+  textContainer: {
+    flex: 1,
+    marginLeft: 10,
+    marginRight: 10,
+  },
+  titleText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  accountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoImage: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  accountText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  amountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  amountText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginRight: 10,
+  },
+  toggleButton: {
     marginLeft: 10,
   },
-  iconBackground: {
+  toggleIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,

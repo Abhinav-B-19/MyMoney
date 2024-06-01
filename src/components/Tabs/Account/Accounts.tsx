@@ -60,70 +60,35 @@ const Accounts: React.FC<AccountsProps> = ({
     "savings",
   ];
   const { transactionsContext, setTransactionsContext } = useTransaction();
-  // const [separatedTransactions, setSeparatedTransactions] = useState({});
   const [accountBalances, setAccountBalances] = useState({});
+  const [totalExpense, setTotalExpense] = useState(0);
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalBalance, setTotalBalance] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Accounts is focused");
+      console.log("Accounts is focused", transactionsContext);
       setIsAccountsScreenFocused(true);
       const initialBalances = {};
-      // Iterate over contextAccounts and populate initialBalances
+      // Initialize accountBalances with balances from contextAccounts
       contextAccounts.forEach((account) => {
         initialBalances[account.name] = account.balance;
-        console.log(initialBalances);
       });
-      // Set the initial balances for accountBalance
-      // setAccountBalances(initialBalances);
-
-      // console.log("initial accountBalances: ", accountBalances);
+      setAccountBalances(initialBalances);
+      const balances = calculateBalances();
+      setAccountBalances(balances);
+      console.log("accountBalances: ", accountBalances);
 
       return () => {
         console.log("Accounts is unfocused");
         setIsAccountsScreenFocused(false);
       };
-    }, [contextAccounts])
+    }, [contextAccounts, transactionsContext, authUser])
   );
-
-  useEffect(() => {
-    // const separated = separateTransactionsByAccount();
-    // setSeparatedTransactions(separated);
-    const balances = calculateBalances();
-    setAccountBalances(balances);
-    console.log("accountBalances: ", accountBalances);
-  }, [transactionsContext, contextAccounts]);
 
   useEffect(() => {
     fetchingDataApi();
   }, []);
-
-  const calculateBalances = () => {
-    // Initialize the balances for each account
-    const initialBalances = {};
-
-    // Process each transaction
-    transactionsContext
-      .filter((transaction) => transaction.userId === authUser)
-      .forEach((transaction) => {
-        const amount = parseFloat(transaction.transactionAmount);
-
-        // Update balances based on transaction type
-        if (transaction.transactionType.toLowerCase() === "expense") {
-          initialBalances[transaction.account] =
-            (initialBalances[transaction.account] || 0) - amount;
-        } else if (transaction.transactionType.toLowerCase() === "income") {
-          initialBalances[transaction.account] =
-            (initialBalances[transaction.account] || 0) + amount;
-        } else if (transaction.transactionType.toLowerCase() === "transfer") {
-          initialBalances[transaction.account] =
-            (initialBalances[transaction.account] || 0) - amount;
-          initialBalances[transaction.toAccount] =
-            (initialBalances[transaction.toAccount] || 0) + amount;
-        }
-      });
-
-    return initialBalances;
-  };
 
   const fetchingDataApi = async () => {
     try {
@@ -138,6 +103,58 @@ const Accounts: React.FC<AccountsProps> = ({
       console.error("Error fetching accounts:", error);
     }
   };
+
+  const calculateBalances = () => {
+    // Initialize the balances for each account
+    const initialBalances = {};
+
+    // Populate initialBalances with balances from contextAccounts
+    contextAccounts.forEach((account) => {
+      initialBalances[account.name] = account.balance;
+    });
+
+    // Process each transaction to update balances
+    transactionsContext
+      .filter((transaction) => transaction.userId === authUser)
+      .forEach((transaction) => {
+        const amount = parseFloat(transaction.transactionAmount);
+
+        // Update balances based on transaction type
+        if (transaction.transactionType.toLowerCase() === "expense") {
+          initialBalances[transaction.account] -= amount;
+          if (transaction.toAccount) {
+            initialBalances[transaction.toAccount] += amount;
+          }
+        } else if (transaction.transactionType.toLowerCase() === "income") {
+          initialBalances[transaction.account] += amount;
+        } else if (transaction.transactionType.toLowerCase() === "transfer") {
+          initialBalances[transaction.account] -= amount; // Deduct amount from sender account
+          initialBalances[transaction.toAccount] += amount; // Add amount to receiver account
+        }
+      });
+
+    return initialBalances;
+  };
+
+  useEffect(() => {
+    const totals = calculateTransactionTotals(transactionsContext, authUser);
+
+    console.log("totals: ", totals);
+    const { totalExpense, totalIncome, overallTotal } = totals;
+
+    setTotalExpense(totalExpense);
+    setTotalIncome(totalIncome);
+    setTotalBalance(overallTotal);
+
+    console.log(
+      "totalExpense: ",
+      totalExpense,
+      "totalIncome: ",
+      totalIncome,
+      "totalBalance: ",
+      overallTotal
+    );
+  }, [transactionsContext, contextAccounts]);
 
   const handleAddAccount = () => {
     setNewAccount({
@@ -288,49 +305,39 @@ const Accounts: React.FC<AccountsProps> = ({
     }
   };
 
-  const totalBalance = contextAccounts.reduce(
-    (total, account) => total + account.balance,
-    0
-  );
+  function calculateTransactionTotals(transactions, userId) {
+    // Initialize variables to store total expense, total income, and overall total
+    let totalExpense = 0;
+    let totalIncome = 0;
 
-  const totalIncome = contextAccounts.reduce((total, account) => {
-    if (account.balance > 0) {
-      return total + account.balance;
-    }
-    return total;
-  }, 0);
+    // Loop through each transaction
+    transactions.forEach((transaction) => {
+      // Check if the transaction belongs to the specified user
+      if (transaction.userId === userId) {
+        // Convert transaction amount to a number
+        const amount = parseFloat(transaction.transactionAmount);
 
-  const totalExpense = contextAccounts.reduce((total, account) => {
-    if (account.balance < 0) {
-      return total + account.balance;
-    }
-    return total;
-  }, 0);
+        // Update total expense if transaction type is 'Expense'
+        if (transaction.transactionType.toLowerCase() === "expense") {
+          totalExpense += amount;
+        }
+        // Update total income if transaction type is 'Income'
+        else if (transaction.transactionType.toLowerCase() === "income") {
+          totalIncome += amount;
+        }
+      }
+    });
 
-  const totalIncomeTrail = transactionsContext.reduce((total, transaction) => {
-    if (transaction.transactionType.toLowerCase() === "income") {
-      return total + parseFloat(transaction.transactionAmount);
-    }
-    return total;
-  }, 0);
+    // Calculate overall total
+    const overallTotal = totalIncome - totalExpense;
 
-  const totalExpenseTrail = transactionsContext.reduce((total, transaction) => {
-    if (transaction.transactionType.toLowerCase() === "expense") {
-      return total + parseFloat(transaction.transactionAmount);
-    }
-    return total;
-  }, 0);
-
-  const totalBalanceTrail = totalIncomeTrail - totalExpenseTrail;
-
-  console.log(
-    "totalBalanceTrail: ",
-    totalBalanceTrail,
-    "totalIncomeTrail: ",
-    totalIncomeTrail,
-    "totalExpenseTrail: ",
-    totalExpenseTrail
-  );
+    // Return an object containing the calculated totals
+    return {
+      totalExpense,
+      totalIncome,
+      overallTotal,
+    };
+  }
 
   if (isLoading) {
     return (
