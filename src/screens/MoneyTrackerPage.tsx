@@ -1,11 +1,6 @@
+// MoneyTrackerPage.tsx
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import {
-  View,
-  StyleSheet,
-  Text,
-  RefreshControl,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, Text, RefreshControl } from "react-native";
 import {
   isSameDay,
   isSameWeek,
@@ -14,8 +9,6 @@ import {
   endOfWeek,
 } from "date-fns";
 import { FlatList } from "react-native-gesture-handler";
-import { ViewModeOptions } from "@/constants/filterOptions";
-import { format } from "date-fns";
 import TrackerView from "@/components/TaskView";
 import DateContext from "../context/DateContext";
 import ViewModeContext from "@/context/ViewModeContext";
@@ -31,12 +24,14 @@ import moment from "moment";
 import NoTransactionPage from "@/components/NoTransactionPage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTransaction } from "@/context/TransactionContext";
+import { useDataLoading } from "@/utils/utilsFunctions";
+import { separateCollectionByViewMode } from "@/utils/utilsFunctions";
 
 const MoneyTrackerPage: React.FC = () => {
   const [selectedTracker, setSelectedTracker] =
     useState<EditTaskViewPopOverProps | null>(null);
   const { selectedDate, handleDateChange } = useContext(DateContext);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -47,6 +42,8 @@ const MoneyTrackerPage: React.FC = () => {
   const { authUser, setAuthUser } = useAuth();
   const { setExpenseTotal, setIncomeTotal, setOverallTotal } = useTotal();
   const { transactionsContext, setTransactionsContext } = useTransaction();
+  const apiEndpoint = "transactions";
+  const { isLoading, data } = useDataLoading(apiEndpoint, authUser);
 
   useEffect(() => {
     handleDateChangeAndUpdate(selectedDate);
@@ -59,6 +56,7 @@ const MoneyTrackerPage: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       console.log("Screen is focused");
+
       fetchingDataApi();
       return () => {
         console.log("Screen is unfocused");
@@ -67,7 +65,11 @@ const MoneyTrackerPage: React.FC = () => {
   );
 
   useEffect(() => {
-    const filteredCollection = separateCollectionByViewMode();
+    const filteredCollection = separateCollectionByViewMode(
+      collection,
+      viewModeContext.viewMode,
+      date
+    );
     if (Array.isArray(filteredCollection)) {
       calculateTotals(filteredCollection);
     }
@@ -92,7 +94,7 @@ const MoneyTrackerPage: React.FC = () => {
       if (response.status === 200 || response.status === 201) {
         setCollection(response.data);
         setTransactionsContext(response.data);
-        setIsLoading(false);
+        // setIsLoading(false);
         setInitialDataFetched(true);
       } else {
         console.error("Failed to fetch transactions:", response.error);
@@ -133,43 +135,6 @@ const MoneyTrackerPage: React.FC = () => {
     console.log("Selected Filter in handleFilterChange:", filter);
   };
 
-  const separateCollectionByViewMode = () => {
-    let filteredCollection = collection;
-
-    switch (viewModeContext.viewMode) {
-      case "daily":
-        filteredCollection = collection.filter((item) =>
-          isSameDay(new Date(item.date), date)
-        );
-        break;
-      case "weekly":
-        const startOfWeekDate = startOfWeek(date, { weekStartsOn: 0 });
-        const endOfWeekDate = endOfWeek(date, { weekStartsOn: 0 });
-        filteredCollection = collection.filter((item) => {
-          const itemDate = new Date(item.date);
-          return itemDate >= startOfWeekDate && itemDate <= endOfWeekDate;
-        });
-        break;
-      case "monthly":
-        filteredCollection = collection.filter((item) =>
-          isSameMonth(new Date(item.date), date)
-        );
-        break;
-      default:
-        break;
-    }
-
-    return getFlatExpenses(filteredCollection);
-  };
-
-  const getFlatExpenses = (filteredData: any[]) => {
-    const sortedExpenses = filteredData.sort((a, b) => {
-      return moment(b.date).diff(moment(a.date));
-    });
-
-    return sortedExpenses;
-  };
-
   const handleTrackerPress = (userID: string, id: string) => {
     const selected = collection.find(
       (item) => item.userID === userID && item.id === id
@@ -184,7 +149,11 @@ const MoneyTrackerPage: React.FC = () => {
     setSelectedTracker(null);
   }, []);
 
-  const separatedCollection = separateCollectionByViewMode();
+  const separatedCollection = separateCollectionByViewMode(
+    collection,
+    viewModeContext.viewMode,
+    date
+  );
 
   if (isLoading) {
     return (

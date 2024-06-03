@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: COLORS.dark,
+    color: COLORS.DARK,
     fontSize: 16,
     paddingHorizontal: 7,
     justifyContent: "center",
