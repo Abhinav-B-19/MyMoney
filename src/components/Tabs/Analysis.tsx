@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
-import { separateCollectionByViewMode } from "@/utils/utilsFunctions";
+import { getPieChartData, getBarChartData } from "@/utils/chartDataUtils";
 import ViewModeContext from "@/context/ViewModeContext";
 import DateContext from "@/context/DateContext";
 import { useTransaction } from "@/context/TransactionContext";
@@ -38,9 +38,7 @@ const Analysis: React.FC = () => {
 
   useEffect(() => {
     handleDateChangeAndUpdate(selectedDate);
-    getPieChartData();
-    const graphData = getBarChartData();
-    setBarGraphData(graphData);
+    updateChartData();
   }, [contextAccounts, selectedOption, selectedDate]);
 
   const handleSelect = (index: number, value: string) => {
@@ -52,182 +50,28 @@ const Analysis: React.FC = () => {
     handleDateChange(newDate);
   };
 
-  const getPieChartData = () => {
-    const separatedCollection = separateCollectionByViewMode(
+  const updateChartData = () => {
+    const pieData = getPieChartData(
       transactionsContext,
       viewModeContext.viewMode,
-      selectedDate
+      selectedDate,
+      selectedOption
     );
+    setSeriesData(pieData.seriesData);
+    setSliceColors(pieData.sliceColors);
+    setCategoryNames(pieData.categoryNames);
+    setPercentages(pieData.percentages);
+    setFilteredData(pieData.filteredData);
 
-    if (!selectedOption || !separatedCollection) {
-      setSeriesData([]);
-      setSliceColors([]);
-      setCategoryNames([]);
-      return;
-    }
-
-    const filteredData = separatedCollection.filter((item) => {
-      if (selectedOption === "Expense overview") {
-        return item.transactionType.toLowerCase() === "expense";
-      } else if (selectedOption === "Income overview") {
-        return item.transactionType.toLowerCase() === "income";
-      }
-      return false;
-    });
-
-    if (!filteredData || filteredData.length === 0) {
-      setSeriesData([]);
-      setSliceColors([]);
-      setCategoryNames([]);
-      return;
-    }
-
-    const categoryTotal = {};
-    filteredData.forEach((item) => {
-      const category = item.category;
-      const amount = parseFloat(item.transactionAmount);
-      if (categoryTotal[category]) {
-        categoryTotal[category] += amount;
-      } else {
-        categoryTotal[category] = amount;
-      }
-    });
-
-    const pieChartData = Object.entries(categoryTotal).map(
-      ([category, amount], index) => ({
-        value: amount,
-        color: getRandomColor(),
-        name: category,
-        series: index,
-        sliceColor: getRandomColor(),
-        externalName: category,
-      })
-    );
-
-    const newSeriesData = pieChartData.map((data) => data.value);
-    const newSliceColors = pieChartData.map((data) => data.color);
-    const newCategoryNames = pieChartData.map((data) => data.name);
-
-    // console.log(newSeriesData, newSliceColors, newCategoryNames);
-
-    const percentages = calculatePercentage(pieChartData);
-    console.log("percentages: ", percentages);
-    setPercentages(percentages);
-
-    setSeriesData(newSeriesData);
-    setSliceColors(newSliceColors);
-    setCategoryNames(newCategoryNames);
-
-    setFilteredData(filteredData);
-  };
-
-  const calculatePercentage = (seriesData: any[]) => {
-    // Calculate the total sum of values
-    const totalSum = seriesData.reduce((acc, curr) => acc + curr.value, 0);
-
-    // Calculate the percentage for each category
-    const percentages = seriesData.map((data) => ({
-      ...data,
-      percentage: ((data.value / totalSum) * 100).toFixed(2),
-    }));
-
-    return percentages;
-  };
-
-  const getRandomColor = () => {
-    const letters = "0123456789ABCDEF";
-    let color = "#";
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
-
-  const getBarChartData = () => {
-    const separatedCollection = separateCollectionByViewMode(
+    const graphData = getBarChartData(
       transactionsContext,
       viewModeContext.viewMode,
-      selectedDate
+      selectedDate,
+      selectedOption,
+      contextAccounts
     );
-
-    if (!selectedOption || !separatedCollection) {
-      return {
-        expenseBarChartData: { datasets: [{ data: [] }], labels: [] },
-        incomeBarChartData: { datasets: [{ data: [] }], labels: [] },
-      };
-    }
-
-    if (selectedOption === "Account analysis") {
-      const filterExpenseData = separatedCollection.filter(
-        (item) => item.transactionType.toLowerCase() === "expense"
-      );
-
-      const filterIncomeData = separatedCollection.filter(
-        (item) => item.transactionType.toLowerCase() === "income"
-      );
-
-      const expenseAccountTotal = {};
-      const incomeAccountTotal = {};
-
-      filterExpenseData.forEach((item) => {
-        const account = item.account;
-        const amount = parseFloat(item.transactionAmount);
-        if (expenseAccountTotal[account]) {
-          expenseAccountTotal[account] += amount;
-        } else {
-          expenseAccountTotal[account] = amount;
-        }
-      });
-
-      filterIncomeData.forEach((item) => {
-        const account = item.account;
-        const amount = parseFloat(item.transactionAmount);
-        if (incomeAccountTotal[account]) {
-          incomeAccountTotal[account] += amount;
-        } else {
-          incomeAccountTotal[account] = amount;
-        }
-      });
-
-      const expenseBarChartData = {
-        datasets: [
-          {
-            data: contextAccounts.map(
-              (account) => expenseAccountTotal[account.name] || 0
-            ),
-          },
-        ],
-        labels: contextAccounts.map((account) => account.name),
-      };
-
-      const incomeBarChartData = {
-        datasets: [
-          {
-            data: contextAccounts.map(
-              (account) => incomeAccountTotal[account.name] || 0
-            ),
-          },
-        ],
-        labels: contextAccounts.map((account) => account.name),
-      };
-
-      console.log(expenseBarChartData, incomeBarChartData);
-
-      return { expenseBarChartData, incomeBarChartData };
-    } else {
-      return {
-        expenseBarChartData: { datasets: [{ data: [] }], labels: [] },
-        incomeBarChartData: { datasets: [{ data: [] }], labels: [] },
-      };
-    }
-  };
-
-  useEffect(() => {
-    handleDateChangeAndUpdate(selectedDate);
-    getPieChartData();
-    const graphData = getBarChartData();
     setBarGraphData(graphData);
-  }, [contextAccounts, selectedOption, selectedDate]);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
