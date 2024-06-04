@@ -8,6 +8,8 @@ import { useTransaction } from "@/context/TransactionContext";
 import PieChart from "react-native-pie-chart";
 import AnalysisCard from "../AnalysisCard";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { useAccount } from "@/context/AccountContext";
+import { BarChart } from "react-native-chart-kit";
 
 const Analysis: React.FC = () => {
   const [selectedOption, setSelectedOption] =
@@ -20,6 +22,11 @@ const Analysis: React.FC = () => {
   const { transactionsContext } = useTransaction();
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [percentages, setPercentages] = useState<any[]>([]);
+  const [barGraphData, setBarGraphData] = useState<any>({
+    expenseBarChartData: [],
+    incomeBarChartData: [],
+  });
+  const { contextAccounts } = useAccount();
 
   const options = [
     "Expense overview",
@@ -32,7 +39,9 @@ const Analysis: React.FC = () => {
   useEffect(() => {
     handleDateChangeAndUpdate(selectedDate);
     getPieChartData();
-  }, [selectedDate, selectedOption]);
+    const graphData = getBarChartData();
+    setBarGraphData(graphData);
+  }, [contextAccounts, selectedOption, selectedDate]);
 
   const handleSelect = (index: number, value: string) => {
     setSelectedOption(value);
@@ -50,8 +59,6 @@ const Analysis: React.FC = () => {
       selectedDate
     );
 
-    console.log("in getPieChartData", selectedOption, separatedCollection);
-
     if (!selectedOption || !separatedCollection) {
       setSeriesData([]);
       setSliceColors([]);
@@ -67,8 +74,6 @@ const Analysis: React.FC = () => {
       }
       return false;
     });
-
-    console.log("filteredData: ", filteredData);
 
     if (!filteredData || filteredData.length === 0) {
       setSeriesData([]);
@@ -138,6 +143,92 @@ const Analysis: React.FC = () => {
     return color;
   };
 
+  const getBarChartData = () => {
+    const separatedCollection = separateCollectionByViewMode(
+      transactionsContext,
+      viewModeContext.viewMode,
+      selectedDate
+    );
+
+    if (!selectedOption || !separatedCollection) {
+      return {
+        expenseBarChartData: { datasets: [{ data: [] }], labels: [] },
+        incomeBarChartData: { datasets: [{ data: [] }], labels: [] },
+      };
+    }
+
+    if (selectedOption === "Account analysis") {
+      const filterExpenseData = separatedCollection.filter(
+        (item) => item.transactionType.toLowerCase() === "expense"
+      );
+
+      const filterIncomeData = separatedCollection.filter(
+        (item) => item.transactionType.toLowerCase() === "income"
+      );
+
+      const expenseAccountTotal = {};
+      const incomeAccountTotal = {};
+
+      filterExpenseData.forEach((item) => {
+        const account = item.account;
+        const amount = parseFloat(item.transactionAmount);
+        if (expenseAccountTotal[account]) {
+          expenseAccountTotal[account] += amount;
+        } else {
+          expenseAccountTotal[account] = amount;
+        }
+      });
+
+      filterIncomeData.forEach((item) => {
+        const account = item.account;
+        const amount = parseFloat(item.transactionAmount);
+        if (incomeAccountTotal[account]) {
+          incomeAccountTotal[account] += amount;
+        } else {
+          incomeAccountTotal[account] = amount;
+        }
+      });
+
+      const expenseBarChartData = {
+        datasets: [
+          {
+            data: contextAccounts.map(
+              (account) => expenseAccountTotal[account.name] || 0
+            ),
+          },
+        ],
+        labels: contextAccounts.map((account) => account.name),
+      };
+
+      const incomeBarChartData = {
+        datasets: [
+          {
+            data: contextAccounts.map(
+              (account) => incomeAccountTotal[account.name] || 0
+            ),
+          },
+        ],
+        labels: contextAccounts.map((account) => account.name),
+      };
+
+      console.log(expenseBarChartData, incomeBarChartData);
+
+      return { expenseBarChartData, incomeBarChartData };
+    } else {
+      return {
+        expenseBarChartData: { datasets: [{ data: [] }], labels: [] },
+        incomeBarChartData: { datasets: [{ data: [] }], labels: [] },
+      };
+    }
+  };
+
+  useEffect(() => {
+    handleDateChangeAndUpdate(selectedDate);
+    getPieChartData();
+    const graphData = getBarChartData();
+    setBarGraphData(graphData);
+  }, [contextAccounts, selectedOption, selectedDate]);
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
@@ -153,62 +244,107 @@ const Analysis: React.FC = () => {
           defaultValue="Expense overview"
         />
         <View style={styles.analysisContainer}>
-          {selectedOption && seriesData.length > 0 ? (
-            <>
-              <View style={styles.chartAndLegendContainer}>
-                <View style={styles.pieChartContainer}>
-                  <PieChart
-                    series={seriesData}
-                    sliceColor={sliceColors}
-                    widthAndHeight={200}
-                    coverRadius={0.65}
-                    coverFill={"#FFFFFF"}
-                  />
-                  <View style={styles.pieChartTextContainer}>
-                    <Text style={styles.pieChartText}>{selectedOption}</Text>
+          {selectedOption === "Expense overview" ||
+          selectedOption === "Income overview" ? (
+            seriesData.length > 0 ? (
+              <>
+                <View style={styles.chartAndLegendContainer}>
+                  <View style={styles.pieChartContainer}>
+                    <PieChart
+                      series={seriesData}
+                      sliceColor={sliceColors}
+                      widthAndHeight={200}
+                      coverRadius={0.65}
+                      coverFill={"#FFFFFF"}
+                    />
+                    <View style={styles.pieChartTextContainer}>
+                      <Text style={styles.pieChartText}>{selectedOption}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.legendContainer}>
+                    {categoryNames.map((category, index) => (
+                      <View key={index} style={styles.legendItem}>
+                        <View
+                          style={[
+                            styles.legendColor,
+                            { backgroundColor: sliceColors[index] },
+                          ]}
+                        />
+                        <Text style={styles.legendText}>{category}</Text>
+                      </View>
+                    ))}
                   </View>
                 </View>
-                <View style={styles.legendContainer}>
-                  {categoryNames.map((category, index) => (
-                    <View key={index} style={styles.legendItem}>
-                      <View
-                        style={[
-                          styles.legendColor,
-                          { backgroundColor: sliceColors[index] },
-                        ]}
-                      />
-                      <Text style={styles.legendText}>{category}</Text>
-                    </View>
+                <View style={styles.separator} />
+                <View style={styles.contentContainer}>
+                  {filteredData.map((item, index) => (
+                    <AnalysisCard
+                      key={index}
+                      title={item.title}
+                      description={item.description}
+                      date={item.date}
+                      transactionAmount={item.transactionAmount}
+                      currency={item.currency}
+                      account={item.account}
+                      toAccount={item.toAccount}
+                      category={item.category}
+                      transactionType={item.transactionType}
+                      isSplitTransaction={item.isSplitTransaction}
+                      percentage={
+                        percentages[index]
+                          ? parseFloat(percentages[index].percentage)
+                          : 0
+                      }
+                    />
                   ))}
                 </View>
+              </>
+            ) : (
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>
+                  No data available for overview
+                </Text>
               </View>
-              <View style={styles.separator} />
-              <View style={styles.contentContainer}>
-                {filteredData.map((item, index) => (
-                  <AnalysisCard
-                    key={index}
-                    title={item.title}
-                    description={item.description}
-                    date={item.date}
-                    transactionAmount={item.transactionAmount}
-                    currency={item.currency}
-                    account={item.account}
-                    toAccount={item.toAccount}
-                    category={item.category}
-                    transactionType={item.transactionType}
-                    isSplitTransaction={item.isSplitTransaction}
-                    percentage={
-                      percentages[index]
-                        ? parseFloat(percentages[index].percentage)
-                        : 0
-                    }
-                  />
-                ))}
-              </View>
-            </>
+            )
+          ) : selectedOption === "Account analysis" ? (
+            <View style={styles.barChartContainer}>
+              <Text style={styles.chartTitle}>EXPENSE ANALYSIS</Text>
+              <BarChart
+                style={styles.barChart}
+                data={barGraphData.expenseBarChartData}
+                width={350}
+                height={200}
+                yAxisLabel=""
+                yAxisSuffix=""
+                chartConfig={{
+                  backgroundGradientFrom: "#FFFFFA",
+                  backgroundGradientTo: "#FFFFFA",
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(145, 47, 64, ${opacity})`,
+                }}
+              />
+
+              <Text style={styles.chartTitle}>INCOME ANALYSIS</Text>
+              <BarChart
+                style={styles.barChart}
+                data={barGraphData.incomeBarChartData}
+                width={350}
+                height={200}
+                yAxisLabel=""
+                yAxisSuffix=""
+                chartConfig={{
+                  backgroundGradientFrom: "#FFFFFA",
+                  backgroundGradientTo: "#FFFFFA",
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(85, 118, 163, ${opacity})`,
+                }}
+              />
+            </View>
           ) : (
             <View style={styles.noDataContainer}>
-              <Text style={styles.noDataText}>No data available</Text>
+              <Text style={styles.noDataText}>
+                No data available for account analysis
+              </Text>
             </View>
           )}
         </View>
@@ -230,7 +366,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   dropdown: {
-    // width: 200,
     borderRadius: 5,
     backgroundColor: "#fff",
     borderColor: "#ccc",
@@ -272,11 +407,9 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: 10,
     paddingBottom: 10,
-    // backgroundColor: "gray",
   },
   pieChartContainer: {
     flex: 2,
-    // backgroundColor: "#f5f5f5",
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
@@ -296,7 +429,6 @@ const styles = StyleSheet.create({
   pieChartText: {
     fontSize: 14,
     color: "gray",
-    // fontWeight: "bold",
   },
   legendContainer: {
     flex: 1,
@@ -325,13 +457,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   contentContainer: {
-    // flex: 1,
     backgroundColor: "#f5f5f5",
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    // padding: 10,
-    // marginTop: 20,
   },
   noDataContainer: {
     justifyContent: "center",
@@ -341,6 +470,21 @@ const styles = StyleSheet.create({
   noDataText: {
     fontSize: 16,
     color: "gray",
+  },
+  barChartContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    // marginTop: 20,
+    width: "100%",
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#080705",
+    margin: 20,
+  },
+  barChart: {
+    marginTop: 10,
   },
 });
 
