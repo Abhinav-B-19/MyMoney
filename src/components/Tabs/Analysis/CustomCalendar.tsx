@@ -27,12 +27,10 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     console.log("flowType: ", extractedData);
   }, [extractedData]);
 
-  // Fill the first week with nulls until the first day of the month
   for (let i = 0; i < firstDayOfMonth; i++) {
     week.push(null);
   }
 
-  // Fill the rest of the weeks with days of the month
   for (let i = 1; i <= daysInMonth; i++) {
     if (week.length === 7) {
       weeks.push(week);
@@ -41,28 +39,36 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     week.push(i);
   }
 
-  // Fill the last week with nulls if necessary to make the table 7x6
   while (week.length < 7) {
     week.push(null);
   }
   weeks.push(week);
 
-  // Function to determine text color based on flow type
   const determineTextColor = (amount: number | null): string => {
-    if (amount === null) return "red"; // Red dot for no data
+    if (amount === null) return "red";
     return flowType === "Income flow" ? "green" : "red";
   };
 
-  // Function to get amount for a specific date
   const getAmountForDate = (date: number): number | null => {
-    const selectedMonth = selectedDate.getMonth() + 1; // Month is zero-indexed
+    const selectedMonth = selectedDate.getMonth() + 1;
     const selectedYear = selectedDate.getFullYear();
     const dateString = `${selectedMonth}/${date}/${selectedYear}`;
     const extracted = extractedData.find((item) => item.date === dateString);
-    return extracted ? extracted.amount : null;
+
+    if (!extracted) {
+      return null;
+    }
+
+    if (
+      (flowType === "Income flow" && extracted.transactionType === "Income") ||
+      (flowType === "Expense flow" && extracted.transactionType === "Expense")
+    ) {
+      return extracted.amount;
+    } else {
+      return null;
+    }
   };
 
-  // Function to get amount string for display with +/- sign
   const getAmountString = (amount: number | null): string => {
     if (amount === null) return "_";
     // "●"
@@ -219,7 +225,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ede", // somewhat brighter border color
+    borderColor: "#ede",
     marginBottom: 5,
     paddingTop: 5,
   },
