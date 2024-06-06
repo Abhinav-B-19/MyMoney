@@ -11,11 +11,12 @@ import ViewModeContext from "@/context/ViewModeContext";
 import DateContext from "@/context/DateContext";
 import { useTransaction } from "@/context/TransactionContext";
 import PieChart from "react-native-pie-chart";
-import AnalysisCard from "../AnalysisCard";
+import AnalysisCard from "../../AnalysisCard";
 import { useAccount } from "@/context/AccountContext";
 import { useCategory } from "@/context/CategoryContext";
 import { BarChart, LineChart } from "react-native-chart-kit";
-import { Calendar } from "react-native-calendars";
+import CustomCalendar from "./CustomCalendar";
+import { separateCollectionByViewMode } from "@/utils/utilsFunctions";
 
 const Analysis: React.FC = () => {
   const [selectedOption, setSelectedOption] =
@@ -36,6 +37,7 @@ const Analysis: React.FC = () => {
   const { transactionsContext } = useTransaction();
   const { contextAccounts } = useAccount();
   const { contextCategories } = useCategory();
+  const [calenderData, setCalenderData] = useState();
 
   const options = [
     "Expense overview",
@@ -48,7 +50,20 @@ const Analysis: React.FC = () => {
   useEffect(() => {
     handleDateChangeAndUpdate(selectedDate);
     updateChartData();
+    const separatedCollection = separateCollectionByViewMode(
+      transactionsContext,
+      viewModeContext.viewMode,
+      selectedDate
+    );
+    setCalenderData(extractDateAndAmount(separatedCollection));
   }, [contextAccounts, selectedOption, selectedDate, viewModeContext]);
+
+  function extractDateAndAmount(data) {
+    return data.map((item) => ({
+      date: new Date(item.date).toLocaleDateString(), // Convert date to local date string
+      amount: parseFloat(item.transactionAmount), // Convert transactionAmount to a floating-point number
+    }));
+  }
 
   const handleSelect = (index: number, value: string) => {
     setSelectedOption(value);
@@ -57,6 +72,10 @@ const Analysis: React.FC = () => {
 
   const handleDateChangeAndUpdate = (newDate: Date) => {
     handleDateChange(newDate);
+  };
+
+  const handlePress = (newDate: Date) => {
+    console.log(newDate);
   };
 
   const updateChartData = () => {
@@ -86,6 +105,8 @@ const Analysis: React.FC = () => {
       selectedOption,
       contextAccounts
     );
+    console.log("graphData: ", graphData);
+
     setBarGraphData(graphData);
 
     const flowChartData = getFlowChartData(
@@ -198,8 +219,8 @@ const Analysis: React.FC = () => {
               </View>
             )
           ) : selectedOption === "Account analysis" ? (
-            barGraphData.expenseBarChartData.length > 0 &&
-            barGraphData.incomeBarChartData.length > 0 ? (
+            barGraphData.expenseBarChartData &&
+            barGraphData.incomeBarChartData ? (
               <>
                 <View style={styles.barChartContainer}>
                   <Text style={styles.chartTitle}>EXPENSE ANALYSIS</Text>
@@ -259,6 +280,12 @@ const Analysis: React.FC = () => {
                     chartConfig={chartConfig}
                     bezier
                   />
+                  <CustomCalendar
+                    selectedDate={selectedDate}
+                    onDatePress={(date) => handlePress(date)}
+                    extractedData={calenderData}
+                    flowType={selectedOption}
+                  />
                 </>
               ) : (
                 <Text style={styles.noDataText}>
@@ -281,7 +308,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    // backgroundColor: "#f5f5f5",
     paddingTop: 10,
     marginBottom: 20,
   },
@@ -311,15 +338,15 @@ const styles = StyleSheet.create({
   },
   analysisContainer: {
     flex: 1,
-    width: "90%",
+    width: "100%",
     padding: 20,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 3.84,
+    // elevation: 5,
   },
   chartAndLegendContainer: {
     flexDirection: "row",

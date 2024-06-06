@@ -12,7 +12,7 @@ import SecondNavbar from "@/components/SecondNavbar";
 import MoneyTrackerPage from "@/screens/MoneyTrackerPage";
 import Categories from "./Tabs/Categories/Categories";
 import Accounts from "./Tabs/Account/Accounts";
-import Analysis from "./Tabs/Analysis";
+import Analysis from "./Tabs/Analysis/Analysis";
 import Budgets from "./Tabs/Budgets";
 import DateContext from "../context/DateContext";
 import { COLORS } from "@/constants/colors";
