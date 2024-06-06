@@ -1,17 +1,24 @@
 import { BASE_URL } from "@/constants/constants";
 
-const fetchDataApi = async (endPoint, userId) => {
+const fetchDataApi = async (endPoint: string, userId: string) => {
   try {
-    // Delay execution by 6 seconds
-    // await new Promise((resolve) => setTimeout(resolve, 4000));
-
-    // Construct the URL dynamically
     const userUrl = `${BASE_URL}/${endPoint}?userId=${userId}`;
     console.log(userUrl);
-    // Fetch user data from the endpoint
+
+    // Promise that resolves after 30 seconds
+    const timeoutPromise: Promise<{ timeout: boolean }> = new Promise(
+      (resolve) => setTimeout(() => resolve({ timeout: true }), 30000)
+    );
+
     const userDataRes = await fetch(userUrl);
 
-    // Check if the request is successful
+    // Use Promise.race to wait for either the fetch or the timeout
+    const result = await Promise.race([userDataRes, timeoutPromise]);
+
+    if ("timeout" in result && result.timeout) {
+      throw new Error("Request timed out");
+    }
+
     if (!userDataRes.ok) {
       const errorMessage = await userDataRes.text();
       throw new Error(

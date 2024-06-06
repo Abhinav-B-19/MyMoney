@@ -67,7 +67,7 @@ const Accounts: React.FC<AccountsProps> = ({
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Accounts is focused", transactionsContext);
+      console.log("Accounts is focused");
       setIsAccountsScreenFocused(true);
       const initialBalances = {};
       // Initialize accountBalances with balances from contextAccounts

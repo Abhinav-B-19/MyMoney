@@ -42,8 +42,11 @@ export const getUserInfo = async (): Promise<{
   currency: string | null;
 }> => {
   try {
-    const country = await AsyncStorage.getItem("country");
-    const currency = await AsyncStorage.getItem("currency");
+    const userInfoString = await AsyncStorage.getItem("userInfo");
+    const userInfo =
+      userInfoString !== null ? JSON.parse(userInfoString) : null;
+    const country = userInfo !== null ? userInfo.country : null;
+    const currency = userInfo !== null ? userInfo.currency : null;
     return { country, currency };
   } catch (e) {
     console.error("Failed to load user info", e);
@@ -56,8 +59,8 @@ export const setUserInfo = async (
   currency: string
 ): Promise<void> => {
   try {
-    await AsyncStorage.setItem("country", country);
-    await AsyncStorage.setItem("currency", currency);
+    const userInfo = { country, currency };
+    await AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
   } catch (e) {
     console.error("Failed to save user info", e);
   }

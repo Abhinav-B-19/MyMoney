@@ -9,23 +9,27 @@ export const ViewModeProvider = ({ children }) => {
 
   useEffect(() => {
     const initializeModeOptions = async () => {
-      const modeOptions = await getModeOptions();
-      console.log("Loaded modeOptions: ", modeOptions);
+      try {
+        const modeOptions = await getModeOptions();
+        console.log("Loaded modeOptions: ", modeOptions);
 
-      if (modeOptions.viewMode !== null) {
-        setViewMode(modeOptions.viewMode);
-      } else {
-        const defaultViewMode = "daily";
-        setViewMode(defaultViewMode);
-        await storeModeOptions(defaultViewMode, modeOptions.showTotal);
-      }
+        if (modeOptions.viewMode !== null) {
+          setViewMode(modeOptions.viewMode);
+        } else {
+          const defaultViewMode = "daily";
+          setViewMode(defaultViewMode);
+          await storeModeOptions(defaultViewMode, modeOptions.showTotal);
+        }
 
-      if (modeOptions.showTotal !== null) {
-        setShowTotal(modeOptions.showTotal);
-      } else {
-        const defaultShowTotal = true;
-        setShowTotal(defaultShowTotal);
-        await storeModeOptions(modeOptions.viewMode, defaultShowTotal);
+        if (modeOptions.showTotal !== null) {
+          setShowTotal(modeOptions.showTotal);
+        } else {
+          const defaultShowTotal = true;
+          setShowTotal(defaultShowTotal);
+          await storeModeOptions(modeOptions.viewMode, defaultShowTotal);
+        }
+      } catch (error) {
+        console.error("Error initializing mode options:", error);
       }
     };
 

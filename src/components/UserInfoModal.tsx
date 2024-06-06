@@ -97,8 +97,8 @@ const UserInfoModal = ({ isVisible, onClose, onSave }) => {
             dropdownStyle={styles.dropdownMenuStyle}
           />
           <View style={styles.buttonContainer}>
-            <Button title="Save" onPress={handleSave} />
             <Button title="Close" onPress={onClose} />
+            <Button title="Save" onPress={handleSave} />
           </View>
         </View>
       </View>

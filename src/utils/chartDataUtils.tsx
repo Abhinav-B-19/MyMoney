@@ -2,6 +2,7 @@
 import { separateCollectionByViewMode } from "@/utils/utilsFunctions";
 import { Transaction } from "@/context/TransactionContext";
 import { Account } from "@/context/AccountContext";
+import { Category } from "@/context/CategoryContext";
 
 export const getPieChartData = (
   transactionsContext: Transaction[],
@@ -90,7 +91,7 @@ export const getBarChartData = (
   viewMode: string,
   selectedDate: Date,
   selectedOption: string,
-  contextAccounts: Account[]
+  contextAccounts: Account[] = []
 ) => {
   const separatedCollection = separateCollectionByViewMode(
     transactionsContext,
@@ -175,4 +176,186 @@ const getRandomColor = () => {
     color += letters[Math.floor(Math.random() * 16)];
   }
   return color;
+};
+
+export const getCategoryBarChartData = (
+  transactionsContext: Transaction[],
+  viewMode: string,
+  selectedDate: Date,
+  selectedOption: string,
+  contextCategories: Category[] = []
+) => {
+  const separatedCollection = separateCollectionByViewMode(
+    transactionsContext,
+    viewMode,
+    selectedDate
+  );
+
+  if (!selectedOption || !separatedCollection) {
+    return {
+      barChartData: { datasets: [{ data: [] }], labels: [] },
+    };
+  }
+
+  let filteredData;
+  if (selectedOption === "Expense flow") {
+    filteredData = separatedCollection.filter(
+      (item) => item.transactionType.toLowerCase() === "expense"
+    );
+  } else if (selectedOption === "Income flow") {
+    filteredData = separatedCollection.filter(
+      (item) => item.transactionType.toLowerCase() === "income"
+    );
+  }
+
+  if (!filteredData) {
+    return {
+      barChartData: { datasets: [{ data: [] }], labels: [] },
+    };
+  }
+
+  const categoryTotal: Record<string, number> = {};
+
+  filteredData.forEach((item) => {
+    const category = item.category;
+    const amount = parseFloat(item.transactionAmount);
+    if (categoryTotal[category]) {
+      categoryTotal[category] += amount;
+    } else {
+      categoryTotal[category] = amount;
+    }
+  });
+
+  const barChartData = {
+    labels: contextCategories.map((category) => category.name),
+    datasets: [
+      {
+        data: contextCategories.map(
+          (category) => categoryTotal[category.name] || 0
+        ),
+        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
+        strokeWidth: 2, // optional
+      },
+    ],
+  };
+
+  console.log(barChartData.datasets);
+  console.log(barChartData.labels);
+
+  return barChartData;
+};
+
+// ======================================
+export const getFlowChartData = (
+  transactionsContext: Transaction[],
+  viewMode: string,
+  selectedDate: Date,
+  selectedOption: string
+) => {
+  const daysInMonth = new Date(
+    selectedDate.getFullYear(),
+    selectedDate.getMonth() + 1,
+    0
+  ).getDate();
+
+  const dailyFlowData = Array.from({ length: daysInMonth }, () => ({
+    value: 0,
+  }));
+
+  const separatedCollection = separateCollectionByViewMode(
+    transactionsContext,
+    viewMode,
+    selectedDate
+  );
+
+  if (!selectedOption || !separatedCollection) {
+    return {
+      barChartData: { datasets: [{ data: [] }], labels: [] },
+    };
+  }
+
+  let filteredData;
+  const option = selectedOption.trim().toLowerCase(); // Normalize selectedOption
+
+  if (option === "expense flow") {
+    filteredData = separatedCollection.filter(
+      (item) => item.transactionType.toLowerCase() === "expense"
+    );
+  } else if (option === "income flow") {
+    filteredData = separatedCollection.filter(
+      (item) => item.transactionType.toLowerCase() === "income"
+    );
+  }
+
+  console.log("filteredData:  ", filteredData);
+
+  if (!filteredData) {
+    return {
+      barChartData: { datasets: [{ data: [] }], labels: [] },
+    };
+  }
+
+  filteredData.forEach((item) => {
+    const transactionDate = new Date(item.date);
+    if (
+      transactionDate.getMonth() === selectedDate.getMonth() &&
+      transactionDate.getFullYear() === selectedDate.getFullYear()
+    ) {
+      const day = transactionDate.getDate() - 1; // Zero-based index
+      if (day >= 0 && day < daysInMonth) {
+        const amount = parseFloat(item.transactionAmount);
+        const lowerCaseSelectedOption = selectedOption.toLowerCase(); // Convert to lowercase
+        const lowerCaseTransactionType = item.transactionType.toLowerCase(); // Convert to lowercase
+        if (
+          lowerCaseSelectedOption === "expense flow" &&
+          lowerCaseTransactionType === "expense"
+        ) {
+          dailyFlowData[day].value += amount;
+        } else if (
+          lowerCaseSelectedOption === "income flow" &&
+          lowerCaseTransactionType === "income"
+        ) {
+          dailyFlowData[day].value += amount;
+        }
+      }
+    }
+  });
+
+  const labels = [];
+  let currentDate = new Date(
+    selectedDate.getFullYear(),
+    selectedDate.getMonth(),
+    1
+  );
+  while (currentDate.getMonth() === selectedDate.getMonth()) {
+    const month = currentDate.toLocaleString("default", { month: "short" });
+    const day = currentDate.getDate().toString().padStart(2, "0"); // Ensure two digits with leading zero if needed
+    labels.push(`${month} ${day}`);
+
+    const nextDate = new Date(currentDate);
+    nextDate.setDate(nextDate.getDate() + 7);
+    if (
+      nextDate.getMonth() !== selectedDate.getMonth() ||
+      nextDate.getDate() > daysInMonth
+    ) {
+      break;
+    } else {
+      currentDate = nextDate;
+    }
+  }
+
+  const label = selectedOption; // Set label based on selectedOption
+
+  const datasets = [
+    {
+      data: dailyFlowData.map((data) => data.value),
+      color: (opacity = 1) =>
+        option === "income flow"
+          ? `rgba(0, 255, 0, ${opacity})` // Green for income
+          : `rgba(255, 0, 0, ${opacity})`, // Red for expense
+      strokeWidth: 2,
+    },
+  ];
+
+  return { datasets, labels };
 };

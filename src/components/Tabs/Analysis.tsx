@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
-import { getPieChartData, getBarChartData } from "@/utils/chartDataUtils";
+import {
+  getPieChartData,
+  getBarChartData,
+  getCategoryBarChartData,
+  getFlowChartData,
+} from "@/utils/chartDataUtils";
 import ViewModeContext from "@/context/ViewModeContext";
 import DateContext from "@/context/DateContext";
 import { useTransaction } from "@/context/TransactionContext";
 import PieChart from "react-native-pie-chart";
 import AnalysisCard from "../AnalysisCard";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import { useAccount } from "@/context/AccountContext";
-import { BarChart } from "react-native-chart-kit";
+import { useCategory } from "@/context/CategoryContext";
+import { BarChart, LineChart } from "react-native-chart-kit";
 
 const Analysis: React.FC = () => {
   const [selectedOption, setSelectedOption] =
@@ -17,16 +22,19 @@ const Analysis: React.FC = () => {
   const [seriesData, setSeriesData] = useState<any[]>([]);
   const [sliceColors, setSliceColors] = useState<string[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>([]);
-  const viewModeContext = useContext(ViewModeContext);
-  const { selectedDate, handleDateChange } = useContext(DateContext);
-  const { transactionsContext } = useTransaction();
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [percentages, setPercentages] = useState<any[]>([]);
   const [barGraphData, setBarGraphData] = useState<any>({
     expenseBarChartData: [],
     incomeBarChartData: [],
   });
+
+  const [lineGraphData, setLineGraphData] = useState<any>();
+  const viewModeContext = useContext(ViewModeContext);
+  const { selectedDate, handleDateChange } = useContext(DateContext);
+  const { transactionsContext } = useTransaction();
   const { contextAccounts } = useAccount();
+  const { contextCategories } = useCategory();
 
   const options = [
     "Expense overview",
@@ -57,11 +65,11 @@ const Analysis: React.FC = () => {
       selectedDate,
       selectedOption
     );
-    setSeriesData(pieData.seriesData);
-    setSliceColors(pieData.sliceColors);
-    setCategoryNames(pieData.categoryNames);
-    setPercentages(pieData.percentages);
-    setFilteredData(pieData.filteredData);
+    setSeriesData(pieData.seriesData || []);
+    setSliceColors(pieData.sliceColors || []);
+    setCategoryNames(pieData.categoryNames || []);
+    setPercentages(pieData.percentages || []);
+    setFilteredData(pieData.filteredData || []);
 
     const graphData = getBarChartData(
       transactionsContext,
@@ -71,6 +79,49 @@ const Analysis: React.FC = () => {
       contextAccounts
     );
     setBarGraphData(graphData);
+
+    const categoryData = getCategoryBarChartData(
+      transactionsContext,
+      viewModeContext.viewMode,
+      selectedDate,
+      selectedOption,
+      contextCategories
+    );
+    // setLineGraphData(categoryData);
+    console.log("lineGraphData: ", categoryData);
+
+    const flowChartData = getFlowChartData(
+      transactionsContext,
+      viewModeContext.viewMode,
+      selectedDate,
+      selectedOption
+    );
+    setLineGraphData(flowChartData);
+    console.log("flowChartData: ", flowChartData);
+    console.log("\nlineGraphData: ", lineGraphData);
+  };
+
+  const chartConfig = {
+    backgroundGradientFrom: "#ffffff", // White background
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#ffffff", // White background
+    backgroundGradientToOpacity: 1,
+    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Black color
+    strokeWidth: 1, // optional, default 3
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false, // optional
+  };
+
+  const data = {
+    labels: ["January", "February", "March", "April", "May", "June"],
+    datasets: [
+      {
+        data: [20, 45, 28, 80, 99, 43],
+        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
+        strokeWidth: 2, // optional
+      },
+    ],
+    legend: ["Rainy Days"], // optional
   };
 
   return (
@@ -167,7 +218,6 @@ const Analysis: React.FC = () => {
                   color: (opacity = 1) => `rgba(145, 47, 64, ${opacity})`,
                 }}
               />
-
               <Text style={styles.chartTitle}>INCOME ANALYSIS</Text>
               <BarChart
                 style={styles.barChart}
@@ -188,6 +238,28 @@ const Analysis: React.FC = () => {
             <View style={styles.noDataContainer}>
               <Text style={styles.noDataText}>
                 No data available for account analysis
+              </Text>
+            </View>
+          )}
+          {selectedOption === "Expense flow" ||
+          selectedOption === "Income flow" ? (
+            <View style={styles.barChartContainer}>
+              <Text
+                style={styles.chartTitle}
+              >{`${selectedOption.toUpperCase()}`}</Text>
+              <LineChart
+                data={lineGraphData}
+                width={350}
+                height={256}
+                verticalLabelRotation={30}
+                chartConfig={chartConfig}
+                bezier
+              />
+            </View>
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>
+                No data available for flow analysis
               </Text>
             </View>
           )}
