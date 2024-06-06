@@ -62,6 +62,7 @@ const Analysis: React.FC = () => {
     return data.map((item) => ({
       date: new Date(item.date).toLocaleDateString(), // Convert date to local date string
       amount: parseFloat(item.transactionAmount), // Convert transactionAmount to a floating-point number
+      transactionType: item.transactionType, // Include transactionType
     }));
   }
 

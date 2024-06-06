@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import ViewModeContext from "@/context/ViewModeContext";
 
 interface CustomCalendarProps {
   selectedDate: Date;
@@ -20,9 +21,10 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   const firstDayOfMonth = new Date(year, selectedDate.getMonth(), 1).getDay();
   const weeks = [];
   let week = [];
+  const viewModeContext = useContext(ViewModeContext);
 
   useEffect(() => {
-    console.log("flowType: ", flowType);
+    console.log("flowType: ", extractedData);
   }, [extractedData]);
 
   // Fill the first week with nulls until the first day of the month
@@ -68,18 +70,8 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     return `${sign}${Math.abs(amount)}`;
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.month}>
-        {month} {year}
-      </Text>
-      <View style={styles.week}>
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
-          <Text key={index} style={[styles.day, styles.brightText]}>
-            {day}
-          </Text>
-        ))}
-      </View>
+  const renderMonthlyView = () => (
+    <>
       {weeks.map((week, index) => (
         <View key={index} style={styles.week}>
           {week.map((day, index) => (
@@ -109,6 +101,99 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
           ))}
         </View>
       ))}
+    </>
+  );
+
+  const renderWeeklyView = () => {
+    const startOfWeek = selectedDate.getDate() - selectedDate.getDay();
+    const daysOfWeek = Array.from(
+      { length: 7 },
+      (_, i) => new Date(selectedDate.setDate(startOfWeek + i))
+    );
+
+    return (
+      <View style={styles.week}>
+        {daysOfWeek.map((date, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.day}
+            onPress={() => onDatePress(date)}
+          >
+            <Text style={[styles.dayText, styles.lightText]}>
+              {date.getDate()}
+            </Text>
+            <Text
+              style={[
+                styles.amountText,
+                {
+                  color: determineTextColor(getAmountForDate(date.getDate())),
+                },
+              ]}
+            >
+              {getAmountString(getAmountForDate(date.getDate()))}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const renderDailyView = () => {
+    const currentDate = selectedDate.getDate();
+    const dayOfWeek = selectedDate.getDay();
+    const startOfWeek = currentDate - dayOfWeek;
+    const weekDates = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(year, selectedDate.getMonth(), startOfWeek + i);
+      return {
+        date: date.getDate(),
+        isCurrentDate: date.getDate() === currentDate,
+      };
+    });
+
+    return (
+      <View style={styles.week}>
+        {weekDates.map((day, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.day, day.isCurrentDate ? styles.selectedDay : null]}
+            onPress={() =>
+              onDatePress(new Date(year, selectedDate.getMonth(), day.date))
+            }
+          >
+            <Text style={[styles.dayText, styles.lightText]}>{day.date}</Text>
+            {day.isCurrentDate && (
+              <Text
+                style={[
+                  styles.amountText,
+                  {
+                    color: determineTextColor(getAmountForDate(day.date)),
+                  },
+                ]}
+              >
+                {getAmountString(getAmountForDate(day.date))}
+              </Text>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.month}>
+        {month} {year}
+      </Text>
+      <View style={styles.week}>
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
+          <Text key={index} style={[styles.day, styles.brightText]}>
+            {day}
+          </Text>
+        ))}
+      </View>
+      {viewModeContext.viewMode === "monthly" && renderMonthlyView()}
+      {viewModeContext.viewMode === "weekly" && renderWeeklyView()}
+      {viewModeContext.viewMode === "daily" && renderDailyView()}
     </View>
   );
 };
@@ -140,6 +225,9 @@ const styles = StyleSheet.create({
   },
   emptyDay: {
     backgroundColor: "#f5f5f5",
+  },
+  selectedDay: {
+    backgroundColor: "#d3d3d3",
   },
   dayText: {
     fontSize: 16,
