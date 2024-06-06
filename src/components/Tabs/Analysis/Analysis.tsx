@@ -18,7 +18,9 @@ import { BarChart, LineChart } from "react-native-chart-kit";
 import CustomCalendar from "./CustomCalendar";
 import { separateCollectionByViewMode } from "@/utils/utilsFunctions";
 
-const Analysis: React.FC = () => {
+const Analysis: React.FC<{ onScroll: (event: any) => void }> = ({
+  onScroll,
+}) => {
   const [selectedOption, setSelectedOption] =
     useState<string>("Expense overview");
   const [seriesData, setSeriesData] = useState<any[]>([]);
@@ -143,7 +145,11 @@ const Analysis: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContainer}
+      onScroll={onScroll}
+      scrollEventThrottle={3}
+    >
       <View style={styles.container}>
         <ModalDropdown
           options={options}

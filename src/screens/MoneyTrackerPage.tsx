@@ -27,7 +27,9 @@ import { useTransaction } from "@/context/TransactionContext";
 import { useDataLoading } from "@/utils/utilsFunctions";
 import { separateCollectionByViewMode } from "@/utils/utilsFunctions";
 
-const MoneyTrackerPage: React.FC = () => {
+const MoneyTrackerPage: React.FC<{ onScroll: (event: any) => void }> = ({
+  onScroll,
+}) => {
   const [selectedTracker, setSelectedTracker] =
     useState<EditTaskViewPopOverProps | null>(null);
   const { selectedDate, handleDateChange } = useContext(DateContext);
@@ -172,6 +174,8 @@ const MoneyTrackerPage: React.FC = () => {
   return (
     <>
       <FlatList
+        onScroll={onScroll}
+        scrollEventThrottle={3}
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 50 }}
         data={Object.entries(groupedExpenses)}

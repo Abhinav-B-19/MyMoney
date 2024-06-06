@@ -1,11 +1,19 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 
-const Budgets: React.FC = () => {
+const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
+  onScroll,
+}) => {
   return (
-    <View>
-      <Text>Budgets Screen</Text>
-    </View>
+    <ScrollView
+      // contentContainerStyle={styles.scrollContainer}
+      onScroll={onScroll}
+      scrollEventThrottle={3}
+    >
+      <View>
+        <Text>Budgets Screen</Text>
+      </View>
+    </ScrollView>
   );
 };
 

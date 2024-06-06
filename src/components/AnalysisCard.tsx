@@ -98,9 +98,8 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
           <View style={styles.progressContainer}>
             <Progress.Bar
               progress={percentage / 100}
-              width={165}
+              width={200}
               animated={true}
-              style={styles.progressBar}
             />
             <Text style={styles.percentageText}>{percentage}%</Text>
           </View>
@@ -169,10 +168,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  progressBar: {
-    flex: 1,
-    marginRight: 10,
   },
   percentageText: {
     fontSize: 16,

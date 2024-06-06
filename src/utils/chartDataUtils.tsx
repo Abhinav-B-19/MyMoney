@@ -283,11 +283,6 @@ export const getFlowChartData = (
 
   let filteredData = [];
   const option = selectedOption.trim().toLowerCase(); // Normalize selectedOption
-  console.log(
-    selectedOption.trim().toLowerCase(),
-    "\nfilteredData: ",
-    filteredData
-  );
 
   if (option === "expense flow") {
     filteredData = separatedCollection.filter(
@@ -298,8 +293,6 @@ export const getFlowChartData = (
       (item) => item.transactionType.toLowerCase() === "income"
     );
   }
-
-  console.log("filteredData in getFlowChartData:  ", filteredData);
 
   if (!filteredData) {
     return {
@@ -340,34 +333,66 @@ export const getFlowChartData = (
     }
   });
 
-  const labels = [];
-  let currentDate = new Date(
-    selectedDate.getFullYear(),
-    selectedDate.getMonth(),
-    1
-  );
-  while (currentDate.getMonth() === selectedDate.getMonth()) {
-    const month = currentDate.toLocaleString("default", { month: "short" });
-    const day = currentDate.getDate().toString().padStart(2, "0"); // Ensure two digits with leading zero if needed
-    labels.push(`${month} ${day}`);
+  let labels = [];
+  let datasetsData = [];
 
-    const nextDate = new Date(currentDate);
-    nextDate.setDate(nextDate.getDate() + 7);
-    if (
-      nextDate.getMonth() !== selectedDate.getMonth() ||
-      nextDate.getDate() > daysInMonth
-    ) {
-      break;
-    } else {
-      currentDate = nextDate;
+  if (viewMode === "monthly") {
+    // Monthly view: labels are in "DD MMM" format for each week of the month
+    let currentDate = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      1
+    );
+    while (currentDate.getMonth() === selectedDate.getMonth()) {
+      const month = currentDate.toLocaleString("default", { month: "short" });
+      const day = currentDate.getDate().toString().padStart(2, "0"); // Ensure two digits with leading zero if needed
+      labels.push(`${day} ${month}`);
+
+      const nextDate = new Date(currentDate);
+      nextDate.setDate(nextDate.getDate() + 7);
+      if (
+        nextDate.getMonth() !== selectedDate.getMonth() ||
+        nextDate.getDate() > daysInMonth
+      ) {
+        break;
+      } else {
+        currentDate = nextDate;
+      }
     }
+    datasetsData = dailyFlowData.map((data) => data.value);
+  } else if (viewMode === "weekly") {
+    // Weekly view: labels are dates for each day of the selected week in "DD MMM" format
+    const startOfWeek = selectedDate.getDate() - selectedDate.getDay();
+    const daysOfWeek = Array.from(
+      { length: 7 },
+      (_, i) => new Date(selectedDate.setDate(startOfWeek + i))
+    );
+    labels = daysOfWeek.map(
+      (date) =>
+        `${date.getDate().toString().padStart(2, "0")} ${date.toLocaleString(
+          "default",
+          { month: "short" }
+        )}`
+    );
+    datasetsData = daysOfWeek.map(
+      (date) => dailyFlowData[date.getDate() - 1]?.value || 0
+    );
+  } else if (viewMode === "daily") {
+    // Daily view: labels are the same date repeated twice in "DD MMM" format
+    const currentDate = selectedDate.getDate();
+    const month = selectedDate.toLocaleString("default", { month: "short" });
+    labels = [
+      "",
+      `${currentDate.toString().padStart(2, "0")} ${month}`,
+      // `${currentDate.toString().padStart(2, "0")} ${month}`,
+      "",
+    ];
+    datasetsData = [0, dailyFlowData[currentDate - 1]?.value || 0, 0];
   }
-
-  const label = selectedOption; // Set label based on selectedOption
 
   const datasets = [
     {
-      data: dailyFlowData.map((data) => data.value),
+      data: datasetsData,
       color: (opacity = 1) =>
         option === "income flow"
           ? `rgba(0, 255, 0, ${opacity})` // Green for income

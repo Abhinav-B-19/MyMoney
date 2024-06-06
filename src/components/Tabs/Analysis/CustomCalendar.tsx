@@ -24,7 +24,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   const viewModeContext = useContext(ViewModeContext);
 
   useEffect(() => {
-    console.log("flowType: ", extractedData);
+    // console.log("extractedData: ", extractedData);
   }, [extractedData]);
 
   for (let i = 0; i < firstDayOfMonth; i++) {
@@ -53,20 +53,25 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     const selectedMonth = selectedDate.getMonth() + 1;
     const selectedYear = selectedDate.getFullYear();
     const dateString = `${selectedMonth}/${date}/${selectedYear}`;
-    const extracted = extractedData.find((item) => item.date === dateString);
 
-    if (!extracted) {
+    const filteredTransactions = extractedData.filter(
+      (item) =>
+        item.date === dateString &&
+        ((flowType === "Income flow" && item.transactionType === "Income") ||
+          (flowType === "Expense flow" && item.transactionType === "Expense"))
+    );
+
+    if (filteredTransactions.length === 0) {
       return null;
     }
 
-    if (
-      (flowType === "Income flow" && extracted.transactionType === "Income") ||
-      (flowType === "Expense flow" && extracted.transactionType === "Expense")
-    ) {
-      return extracted.amount;
-    } else {
-      return null;
-    }
+    // Calculate total amount
+    const totalAmount = filteredTransactions.reduce(
+      (acc, curr) => acc + curr.amount,
+      0
+    );
+
+    return totalAmount;
   };
 
   const getAmountString = (amount: number | null): string => {

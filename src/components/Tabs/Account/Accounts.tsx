@@ -32,11 +32,13 @@ interface Account {
 }
 
 interface AccountsProps {
+  onScroll: (event: any) => void;
   setIsAccountsScreenFocused: React.Dispatch<React.SetStateAction<boolean>>;
   onDeleteSuccess: () => void;
 }
 
 const Accounts: React.FC<AccountsProps> = ({
+  onScroll,
   setIsAccountsScreenFocused,
   onDeleteSuccess,
 }) => {
@@ -348,7 +350,11 @@ const Accounts: React.FC<AccountsProps> = ({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      onScroll={onScroll}
+      scrollEventThrottle={3}
+    >
       <View style={styles.container}>
         <Text style={styles.sectionHeader}>Overall</Text>
         <View style={styles.overallSection}>

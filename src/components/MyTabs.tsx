@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   MaterialCommunityIcons,
@@ -16,6 +16,7 @@ import Analysis from "./Tabs/Analysis/Analysis";
 import Budgets from "./Tabs/Budgets";
 import DateContext from "../context/DateContext";
 import { COLORS } from "@/constants/colors";
+import { useFocusEffect } from "@react-navigation/native";
 
 type RootTabParamList = {
   Records: undefined;
@@ -36,10 +37,36 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
   const [isCategoriesScreenFocused, setIsCategoriesScreenFocused] =
     useState(false);
   const [isAccountsScreenFocused, setIsAccountsScreenFocused] = useState(false);
+  const [plusIconVisible] = useState(new Animated.Value(1));
 
   const navigateToAddTransactionDetails = () => {
     navigation.navigate("AddTransactionDetails"); // Navigate to AddTransactionDetails screen
   };
+
+  const handleScroll = (event: any) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    if (scrollY > 0) {
+      Animated.timing(plusIconVisible, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(plusIconVisible, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  useFocusEffect(() => {
+    Animated.timing(plusIconVisible, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  });
 
   return (
     <View style={styles.container}>
@@ -54,7 +81,6 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
       <Tab.Navigator>
         <Tab.Screen
           name="Records"
-          component={MoneyTrackerPage}
           options={{
             headerShown: false,
             tabBarLabel: "Records",
@@ -62,10 +88,11 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
               <MaterialCommunityIcons name="home" color={color} size={size} />
             ),
           }}
-        />
+        >
+          {() => <MoneyTrackerPage onScroll={handleScroll} />}
+        </Tab.Screen>
         <Tab.Screen
           name="Analysis"
-          component={Analysis}
           options={{
             headerShown: false,
             tabBarLabel: "Analysis",
@@ -73,10 +100,11 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
               <MaterialCommunityIcons name="bell" color={color} size={size} />
             ),
           }}
-        />
+        >
+          {() => <Analysis onScroll={handleScroll} />}
+        </Tab.Screen>
         <Tab.Screen
           name="Budgets"
-          component={Budgets}
           options={{
             headerShown: false,
             tabBarLabel: "Budgets",
@@ -84,7 +112,9 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
               <Ionicons name="calculator-outline" size={size} color={color} />
             ),
           }}
-        />
+        >
+          {() => <Budgets onScroll={handleScroll} />}
+        </Tab.Screen>
         <Tab.Screen
           name="Accounts"
           options={{
@@ -100,7 +130,10 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
           }}
         >
           {() => (
-            <Accounts setIsAccountsScreenFocused={setIsAccountsScreenFocused} />
+            <Accounts
+              setIsAccountsScreenFocused={setIsAccountsScreenFocused}
+              onScroll={handleScroll}
+            />
           )}
         </Tab.Screen>
         <Tab.Screen
@@ -116,16 +149,21 @@ const MyTabs: React.FC<BottomTabScreenProps<"Records">> = ({ navigation }) => {
           {() => (
             <Categories
               setIsCategoriesScreenFocused={setIsCategoriesScreenFocused}
+              onScroll={handleScroll}
             />
           )}
         </Tab.Screen>
       </Tab.Navigator>
-      <TouchableOpacity
-        style={styles.plusIconContainer}
-        onPress={navigateToAddTransactionDetails}
+      <Animated.View
+        style={[
+          styles.plusIconContainer,
+          { opacity: plusIconVisible, transform: [{ scale: plusIconVisible }] },
+        ]}
       >
-        <MaterialCommunityIcons name="plus" size={24} color="white" />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={navigateToAddTransactionDetails}>
+          <MaterialCommunityIcons name="plus" size={24} color="white" />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 };

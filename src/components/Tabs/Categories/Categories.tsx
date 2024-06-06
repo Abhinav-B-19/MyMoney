@@ -31,11 +31,13 @@ interface Category {
 }
 
 interface CategoriesProps {
+  onScroll: (event: any) => void;
   setIsCategoriesScreenFocused: React.Dispatch<React.SetStateAction<boolean>>;
   onDeleteSuccess: () => void;
 }
 
 const Categories: React.FC<CategoriesProps> = ({
+  onScroll,
   setIsCategoriesScreenFocused,
   onDeleteSuccess,
 }) => {
@@ -258,6 +260,8 @@ const Categories: React.FC<CategoriesProps> = ({
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         // style={styles.scrollView}
+        onScroll={onScroll}
+        scrollEventThrottle={3}
       >
         <View style={styles.categorySection}>
           <Text style={styles.sectionHeader}>Income Categories</Text>
