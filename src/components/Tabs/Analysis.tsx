@@ -15,6 +15,7 @@ import AnalysisCard from "../AnalysisCard";
 import { useAccount } from "@/context/AccountContext";
 import { useCategory } from "@/context/CategoryContext";
 import { BarChart, LineChart } from "react-native-chart-kit";
+import { Calendar } from "react-native-calendars";
 
 const Analysis: React.FC = () => {
   const [selectedOption, setSelectedOption] =
@@ -47,7 +48,7 @@ const Analysis: React.FC = () => {
   useEffect(() => {
     handleDateChangeAndUpdate(selectedDate);
     updateChartData();
-  }, [contextAccounts, selectedOption, selectedDate]);
+  }, [contextAccounts, selectedOption, selectedDate, viewModeContext]);
 
   const handleSelect = (index: number, value: string) => {
     setSelectedOption(value);
@@ -59,6 +60,13 @@ const Analysis: React.FC = () => {
   };
 
   const updateChartData = () => {
+    console.log("Updating chart data...");
+
+    if (!transactionsContext || !viewModeContext || !selectedDate) {
+      console.error("Missing required data for chart update.");
+      return;
+    }
+
     const pieData = getPieChartData(
       transactionsContext,
       viewModeContext.viewMode,
@@ -80,16 +88,6 @@ const Analysis: React.FC = () => {
     );
     setBarGraphData(graphData);
 
-    const categoryData = getCategoryBarChartData(
-      transactionsContext,
-      viewModeContext.viewMode,
-      selectedDate,
-      selectedOption,
-      contextCategories
-    );
-    // setLineGraphData(categoryData);
-    console.log("lineGraphData: ", categoryData);
-
     const flowChartData = getFlowChartData(
       transactionsContext,
       viewModeContext.viewMode,
@@ -97,8 +95,6 @@ const Analysis: React.FC = () => {
       selectedOption
     );
     setLineGraphData(flowChartData);
-    console.log("flowChartData: ", flowChartData);
-    console.log("\nlineGraphData: ", lineGraphData);
   };
 
   const chartConfig = {
@@ -112,16 +108,16 @@ const Analysis: React.FC = () => {
     useShadowColorFromDataset: false, // optional
   };
 
-  const data = {
-    labels: ["January", "February", "March", "April", "May", "June"],
+  const defaultData = {
+    labels: [],
     datasets: [
       {
-        data: [20, 45, 28, 80, 99, 43],
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
-        strokeWidth: 2, // optional
+        data: [],
+        color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Default to black color
+        strokeWidth: 2,
       },
     ],
-    legend: ["Rainy Days"], // optional
+    legend: [],
   };
 
   return (
@@ -202,65 +198,73 @@ const Analysis: React.FC = () => {
               </View>
             )
           ) : selectedOption === "Account analysis" ? (
-            <View style={styles.barChartContainer}>
-              <Text style={styles.chartTitle}>EXPENSE ANALYSIS</Text>
-              <BarChart
-                style={styles.barChart}
-                data={barGraphData.expenseBarChartData}
-                width={350}
-                height={200}
-                yAxisLabel=""
-                yAxisSuffix=""
-                chartConfig={{
-                  backgroundGradientFrom: "#FFFFFA",
-                  backgroundGradientTo: "#FFFFFA",
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(145, 47, 64, ${opacity})`,
-                }}
-              />
-              <Text style={styles.chartTitle}>INCOME ANALYSIS</Text>
-              <BarChart
-                style={styles.barChart}
-                data={barGraphData.incomeBarChartData}
-                width={350}
-                height={200}
-                yAxisLabel=""
-                yAxisSuffix=""
-                chartConfig={{
-                  backgroundGradientFrom: "#FFFFFA",
-                  backgroundGradientTo: "#FFFFFA",
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(85, 118, 163, ${opacity})`,
-                }}
-              />
-            </View>
+            barGraphData.expenseBarChartData.length > 0 &&
+            barGraphData.incomeBarChartData.length > 0 ? (
+              <>
+                <View style={styles.barChartContainer}>
+                  <Text style={styles.chartTitle}>EXPENSE ANALYSIS</Text>
+                  <BarChart
+                    style={styles.barChart}
+                    data={barGraphData.expenseBarChartData}
+                    width={350}
+                    height={200}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    chartConfig={{
+                      backgroundGradientFrom: "#FFFFFA",
+                      backgroundGradientTo: "#FFFFFA",
+                      decimalPlaces: 0,
+                      color: (opacity = 1) => `rgba(145, 47, 64, ${opacity})`,
+                    }}
+                  />
+                  <Text style={styles.chartTitle}>INCOME ANALYSIS</Text>
+                  <BarChart
+                    style={styles.barChart}
+                    data={barGraphData.incomeBarChartData}
+                    width={350}
+                    height={200}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    chartConfig={{
+                      backgroundGradientFrom: "#FFFFFA",
+                      backgroundGradientTo: "#FFFFFA",
+                      decimalPlaces: 0,
+                      color: (opacity = 1) => `rgba(85, 118, 163, ${opacity})`,
+                    }}
+                  />
+                </View>
+                {/* Render additional components */}
+              </>
+            ) : (
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>
+                  No data available for account analysis
+                </Text>
+              </View>
+            )
           ) : (
-            <View style={styles.noDataContainer}>
-              <Text style={styles.noDataText}>
-                No data available for account analysis
-              </Text>
-            </View>
-          )}
-          {selectedOption === "Expense flow" ||
-          selectedOption === "Income flow" ? (
             <View style={styles.barChartContainer}>
-              <Text
-                style={styles.chartTitle}
-              >{`${selectedOption.toUpperCase()}`}</Text>
-              <LineChart
-                data={lineGraphData}
-                width={350}
-                height={256}
-                verticalLabelRotation={30}
-                chartConfig={chartConfig}
-                bezier
-              />
-            </View>
-          ) : (
-            <View style={styles.noDataContainer}>
-              <Text style={styles.noDataText}>
-                No data available for flow analysis
-              </Text>
+              {lineGraphData &&
+              lineGraphData.datasets &&
+              lineGraphData.datasets.length > 0 ? (
+                <>
+                  <Text style={styles.chartTitle}>
+                    {`${selectedOption.toUpperCase()}`}
+                  </Text>
+                  <LineChart
+                    data={lineGraphData}
+                    width={350}
+                    height={256}
+                    verticalLabelRotation={30}
+                    chartConfig={chartConfig}
+                    bezier
+                  />
+                </>
+              ) : (
+                <Text style={styles.noDataText}>
+                  No data available for flow analysis
+                </Text>
+              )}
             </View>
           )}
         </View>

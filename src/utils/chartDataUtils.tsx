@@ -270,12 +270,24 @@ export const getFlowChartData = (
 
   if (!selectedOption || !separatedCollection) {
     return {
-      barChartData: { datasets: [{ data: [] }], labels: [] },
+      datasets: [
+        {
+          data: [],
+          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Default to black color
+          strokeWidth: 2,
+        },
+      ],
+      labels: [],
     };
   }
 
-  let filteredData;
+  let filteredData = [];
   const option = selectedOption.trim().toLowerCase(); // Normalize selectedOption
+  console.log(
+    selectedOption.trim().toLowerCase(),
+    "\nfilteredData: ",
+    filteredData
+  );
 
   if (option === "expense flow") {
     filteredData = separatedCollection.filter(
@@ -287,11 +299,18 @@ export const getFlowChartData = (
     );
   }
 
-  console.log("filteredData:  ", filteredData);
+  console.log("filteredData in getFlowChartData:  ", filteredData);
 
   if (!filteredData) {
     return {
-      barChartData: { datasets: [{ data: [] }], labels: [] },
+      datasets: [
+        {
+          data: [],
+          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Default to black color
+          strokeWidth: 2,
+        },
+      ],
+      labels: [],
     };
   }
 

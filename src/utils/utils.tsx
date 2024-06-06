@@ -71,10 +71,10 @@ export const storeModeOptions = async (
   showTotal?: boolean
 ) => {
   try {
-    if (viewMode !== undefined) {
+    if (viewMode !== undefined && viewMode !== null) {
       await AsyncStorage.setItem("@viewMode", viewMode);
     }
-    if (showTotal !== undefined) {
+    if (showTotal !== undefined && showTotal !== null) {
       await AsyncStorage.setItem("@showTotal", JSON.stringify(showTotal));
     }
   } catch (error) {
