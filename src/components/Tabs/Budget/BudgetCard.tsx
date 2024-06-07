@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Pressable,
   Modal,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons"; // Import MaterialIcons from Expo vector icons
 import { COLORS } from "@/constants/colors";
@@ -21,6 +22,9 @@ import medicalIcon from "../../../../assets/Category/medical.png";
 import shoppingIcon from "../../../../assets/Category/shopping.png";
 import travelIcon from "../../../../assets/Category/travel.png";
 import emptyIcon from "../../../../assets/Category/empty.png";
+import { calculateCategorySpending } from "@/utils/utilsFunctions";
+import { useAuth } from "@/context/AuthContext";
+import { useTransaction } from "@/context/TransactionContext";
 
 interface BudgetCardProps {
   category: string;
@@ -50,14 +54,52 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
     shopping: shoppingIcon,
   };
 
-  const imageSource = categoryImages[category.toLocaleLowerCase()] || emptyIcon;
+  const imageSource = categoryImages[category.toLowerCase()] || emptyIcon;
 
-  const [budgetLimit, setBudgetLimit] = useState<string>("");
+  const [budgetLimit, setBudgetLimit] = useState<string>(
+    selectedCategory && selectedCategory.budgetLimit
+      ? selectedCategory.budgetLimit.toString()
+      : ""
+  );
+
+  const [spent, setSpent] = useState<number>(0);
+  const [limit, setLimit] = useState<number>(parseInt(budgetLimit) || 0);
+  const [remaining, setRemaining] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0);
+
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [isDropdownVisible, setIsDropdownVisible] = React.useState(false);
   const [popupPosition, setPopupPosition] = React.useState({ x: 0, y: 0 });
   const [dropdownWidth, setDropdownWidth] = React.useState(0);
   const dropdownRef = React.useRef<View>(null);
+  const { authUser } = useAuth();
+  const { transactionsContext } = useTransaction();
+
+  useEffect(() => {
+    const fetchSpendingData = async () => {
+      const spending = await calculateCategorySpending(
+        transactionsContext,
+        authUser,
+        category,
+        selectedDate
+      );
+      setSpent(spending);
+
+      const currentLimit = selectedCategory?.budgetLimits?.find(
+        (budget) =>
+          budget.month === selectedDate.getMonth() + 1 &&
+          budget.year === selectedDate.getFullYear()
+      )?.limit;
+
+      if (currentLimit) {
+        setLimit(currentLimit);
+        setRemaining(currentLimit - spending);
+        setProgress((spending / currentLimit) * 100);
+      }
+    };
+
+    fetchSpendingData();
+  }, [transactionsContext, authUser, category, selectedDate]);
 
   const handleSetBudget = () => {
     setModalVisible(true);
@@ -68,7 +110,14 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
   };
 
   const handleConfirmBudget = () => {
-    console.log("Budget set:", category, budgetLimit);
+    const budgetData = {
+      month: selectedDate.getMonth() + 1,
+      year: selectedDate.getFullYear(),
+      limit: parseInt(budgetLimit),
+    };
+    setLimit(parseInt(budgetLimit));
+    setRemaining(parseInt(budgetLimit) - spent);
+    setProgress((spent / parseInt(budgetLimit)) * 100);
     closeModal();
   };
 
@@ -94,17 +143,33 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
   };
 
   const handleChangeLimitDropdown = () => {
-    console.log("handleChangeLimitDropdown");
+    handleSetBudget();
+    handleCloseDropdown();
   };
 
   const handleRemoveBudgetDropdown = () => {
-    console.log("handleRemoveBudgetDropdown");
+    handleCloseDropdown();
+    Alert.alert(
+      "Remove this budget",
+      "Budget over this category will be removed for this month, are you sure?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: () => {
+            setLimit(0);
+            setRemaining(spent);
+            setProgress(0);
+            console.log("Budget removed");
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
-
-  const spent = 50; // Example spent amount
-  const limit = 100; // Example budget limit
-  const remaining = limit - spent;
-  const progress = (spent / limit) * 100;
 
   return (
     <View style={styles.container}>
@@ -132,7 +197,9 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
             <Text style={styles.amountText}>Spent: ${spent}</Text>
             <Text style={styles.amountText}>Remaining: ${remaining}</Text>
             <View style={styles.progressMarkerContainer}>
-              <Text style={styles.monthText}>(Month)</Text>
+              <Text style={styles.monthText}>
+                ({months[selectedDate.getMonth()]})
+              </Text>
               <View style={styles.limitTextContainer}>
                 <Text style={styles.limitText}>{limit}</Text>
               </View>
@@ -154,10 +221,9 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Set Budget</Text>
-            <View style={styles.categoryContainer}>
-              <Text style={styles.categoryName}>
-                {selectedCategory && selectedCategory.name}
-              </Text>
+            <View style={styles.modelCategoryContainer}>
+              <Image source={imageSource} style={styles.image} />
+              <Text style={styles.modelCategoryText}>{category}</Text>
             </View>
             <View style={styles.inputContainer}>
               <Text style={styles.inputTitle}>Limit</Text>
@@ -165,13 +231,8 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
                 style={styles.inputField}
                 placeholder="Enter limit"
                 keyboardType="numeric"
-                value={selectedCategory && selectedCategory.budgetLimit}
-                // onChangeText={(text) =>
-                //   selectedCategory({
-                //     ...selectedCategory,
-                //     budgetLimit: text,
-                //   })
-                // }
+                value={budgetLimit}
+                onChangeText={(text) => setBudgetLimit(text)}
               />
             </View>
             <View style={styles.monthContainer}>
@@ -185,11 +246,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
               <Button
                 title="Set"
                 onPress={() => {
-                  console.log(
-                    "Budget set:",
-                    selectedCategory.name,
-                    selectedCategory.budgetLimit
-                  );
+                  handleConfirmBudget();
                   closeModal();
                 }}
               />
@@ -281,6 +338,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   inputField: {
     borderWidth: 1,
@@ -288,12 +346,22 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 5,
     marginBottom: 5,
-    width: "50%",
+    width: "85%",
     marginRight: 10,
   },
   categoryContainer: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  modelCategoryContainer: {
+    paddingLeft: 15,
+    borderWidth: 1,
+    borderColor: "black",
+    alignItems: "center",
+    borderRadius: 5,
+    height: 70,
+    flexDirection: "row",
+    marginBottom: 20,
   },
   modalContainer: {
     flex: 1,
@@ -313,6 +381,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
+  },
+  modelCategoryText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingLeft: 20,
   },
   categoryName: {
     fontSize: 16,
@@ -393,7 +466,6 @@ const styles = StyleSheet.create({
   limitTextContainer: {
     backgroundColor: COLORS.ACCENT,
     padding: 5,
-    // borderRadius: 5,
     marginLeft: 5,
   },
   limitText: {

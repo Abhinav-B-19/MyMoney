@@ -122,6 +122,8 @@ const Categories: React.FC<CategoriesProps> = ({
       ...newCategory,
       userId: authUser,
       isIgnored: false,
+      isBudgeted: false,
+      budgetLimits: [],
     };
 
     try {

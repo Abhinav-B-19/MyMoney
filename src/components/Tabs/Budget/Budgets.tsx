@@ -38,6 +38,7 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
   ];
 
   useEffect(() => {
+    console.log(selectedDate);
     handleDateChangeAndUpdate(selectedDate);
   }, [selectedDate]);
 
@@ -51,21 +52,6 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
     );
     setBudgetedTransactions(budgetedTransactionsFiltered);
     setNonBudgetedTransactions(nonBudgetedTransactionsFiltered);
-  };
-
-  const openModal = (category) => {
-    setSelectedCategory(category);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedCategory(null);
-  };
-
-  const handleSetBudget = () => {
-    console.log("Budget set:", selectedCategory.name, budgetLimit);
-    closeModal();
   };
 
   return (
@@ -89,10 +75,10 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
                 key={index}
                 category={transaction.name}
                 amount={transaction.amount}
-                isBudgeted={true}
+                isBudgeted={transaction.isBudgeted}
                 selectedDate={selectedDate}
                 months={months}
-                selectedCategory={selectedCategory} // Pass selectedCategory to BudgetCard
+                selectedCategory={transaction} // Pass selectedCategory to BudgetCard
               />
             ))
           )}
@@ -106,50 +92,14 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
               key={index}
               category={transaction.name}
               amount={transaction.amount}
-              isBudgeted={false}
+              isBudgeted={transaction.isBudgeted}
+              selectedDate={selectedDate}
+              months={months}
+              selectedCategory={transaction}
             />
           ))}
         </View>
       </View>
-
-      {/* Modal
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Set Budget</Text>
-            <View style={styles.categoryContainer}>
-              <Text style={styles.categoryName}>
-                {selectedCategory && selectedCategory.name}
-              </Text>
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputTitle}>Limit</Text>
-              <TextInput
-                style={styles.inputField}
-                placeholder="Enter limit"
-                keyboardType="numeric"
-                value={budgetLimit}
-                onChangeText={setBudgetLimit}
-              />
-            </View>
-            <View style={styles.monthContainer}>
-              <Text style={styles.lightText}>
-                Month: {months[selectedDate.getMonth()]}{" "}
-                {selectedDate.getFullYear()}
-              </Text>
-            </View>
-            <View style={styles.buttonContainer}>
-              <Button title="Cancel" onPress={closeModal} />
-              <Button title="Set" onPress={handleSetBudget} />
-            </View>
-          </View>
-        </View>
-      </Modal> */}
     </ScrollView>
   );
 };

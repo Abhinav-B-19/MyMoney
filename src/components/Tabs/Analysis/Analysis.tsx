@@ -82,8 +82,6 @@ const Analysis: React.FC<{ onScroll: (event: any) => void }> = ({
   };
 
   const updateChartData = () => {
-    console.log("Updating chart data...");
-
     if (!transactionsContext || !viewModeContext || !selectedDate) {
       console.error("Missing required data for chart update.");
       return;
@@ -108,8 +106,6 @@ const Analysis: React.FC<{ onScroll: (event: any) => void }> = ({
       selectedOption,
       contextAccounts
     );
-    console.log("graphData: ", graphData);
-
     setBarGraphData(graphData);
 
     const flowChartData = getFlowChartData(

@@ -74,3 +74,26 @@ const getFlatExpenses = (filteredData: any[]) => {
 
   return sortedExpenses;
 };
+
+// Add this function in your utilsFunctions.js or wherever it's defined
+export const calculateCategorySpending = (
+  transactionsContext,
+  authUser,
+  categoryName
+) => {
+  let totalSpent = 0;
+
+  transactionsContext
+    .filter(
+      (transaction) =>
+        transaction.userId === authUser &&
+        transaction.category.toLowerCase() === categoryName.toLowerCase() &&
+        transaction.transactionType.toLowerCase() === "expense"
+    )
+    .forEach((transaction) => {
+      const amount = parseFloat(transaction.transactionAmount);
+      totalSpent += amount;
+    });
+
+  return totalSpent;
+};
