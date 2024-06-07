@@ -11,7 +11,7 @@ import ViewModeContext from "@/context/ViewModeContext";
 import DateContext from "@/context/DateContext";
 import { useTransaction } from "@/context/TransactionContext";
 import PieChart from "react-native-pie-chart";
-import AnalysisCard from "../../AnalysisCard";
+import AnalysisCard from "./AnalysisCard";
 import { useAccount } from "@/context/AccountContext";
 import { useCategory } from "@/context/CategoryContext";
 import { BarChart, LineChart } from "react-native-chart-kit";

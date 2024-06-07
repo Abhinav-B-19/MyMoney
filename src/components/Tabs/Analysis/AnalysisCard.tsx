@@ -1,15 +1,15 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
-import carIcon from "../../assets/Category/car.png";
-import entertainmentIcon from "../../assets/Category/entertainment.png";
-import fitnessIcon from "../../assets/Category/fitness.png";
-import foodIcon from "../../assets/Category/food.png";
-import groceriesIcon from "../../assets/Category/groceries.png";
-import medicalIcon from "../../assets/Category/medical.png";
-import shoppingIcon from "../../assets/Category/shopping.png";
-import travelIcon from "../../assets/Category/travel.png";
-import emptyIcon from "../../assets/Category/empty.png";
-import transferIcon from "../../assets/Category/transfer.png";
+import carIcon from "../../../../assets/Category/car.png";
+import entertainmentIcon from "../../../../assets/Category/entertainment.png";
+import fitnessIcon from "../../../../assets/Category/fitness.png";
+import foodIcon from "../../../../assets/Category/food.png";
+import groceriesIcon from "../../../../assets/Category/groceries.png";
+import medicalIcon from "../../../../assets/Category/medical.png";
+import shoppingIcon from "../../../../assets/Category/shopping.png";
+import travelIcon from "../../../../assets/Category/travel.png";
+import emptyIcon from "../../../../assets/Category/empty.png";
+import transferIcon from "../../../../assets/Category/transfer.png";
 import { COLORS } from "@/constants/colors";
 import * as Progress from "react-native-progress";
 
