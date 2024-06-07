@@ -198,7 +198,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
             <Text style={styles.amountText}>Remaining: ${remaining}</Text>
             <View style={styles.progressMarkerContainer}>
               <Text style={styles.monthText}>
-                ({months[selectedDate.getMonth()]})
+                ({months[selectedDate.getMonth()]} {selectedDate.getFullYear()})
               </Text>
               <View style={styles.limitTextContainer}>
                 <Text style={styles.limitText}>{limit}</Text>

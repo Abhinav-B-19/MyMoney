@@ -45,10 +45,22 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
   const handleDateChangeAndUpdate = (newDate: Date) => {
     handleDateChange(newDate);
     const budgetedTransactionsFiltered = contextCategories.filter(
-      (transaction) => transaction.isBudgeted
+      (transaction) =>
+        transaction.isBudgeted &&
+        transaction.budgetLimits.some(
+          (limit) =>
+            limit.month === newDate.getMonth() + 1 &&
+            limit.year === newDate.getFullYear()
+        )
     );
     const nonBudgetedTransactionsFiltered = contextCategories.filter(
-      (transaction) => !transaction.isBudgeted
+      (transaction) =>
+        !transaction.isBudgeted ||
+        !transaction.budgetLimits.some(
+          (limit) =>
+            limit.month === newDate.getMonth() + 1 &&
+            limit.year === newDate.getFullYear()
+        )
     );
     setBudgetedTransactions(budgetedTransactionsFiltered);
     setNonBudgetedTransactions(nonBudgetedTransactionsFiltered);

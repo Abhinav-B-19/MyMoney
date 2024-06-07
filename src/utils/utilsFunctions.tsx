@@ -79,17 +79,25 @@ const getFlatExpenses = (filteredData: any[]) => {
 export const calculateCategorySpending = (
   transactionsContext,
   authUser,
-  categoryName
+  categoryName,
+  selectedDate
 ) => {
   let totalSpent = 0;
 
+  const selectedMonth = selectedDate.getMonth();
+  const selectedYear = selectedDate.getFullYear();
+
   transactionsContext
-    .filter(
-      (transaction) =>
+    .filter((transaction) => {
+      const transactionDate = new Date(transaction.transactionDate);
+      return (
         transaction.userId === authUser &&
         transaction.category.toLowerCase() === categoryName.toLowerCase() &&
-        transaction.transactionType.toLowerCase() === "expense"
-    )
+        transaction.transactionType.toLowerCase() === "expense" &&
+        transactionDate.getMonth() === selectedMonth &&
+        transactionDate.getFullYear() === selectedYear
+      );
+    })
     .forEach((transaction) => {
       const amount = parseFloat(transaction.transactionAmount);
       totalSpent += amount;
