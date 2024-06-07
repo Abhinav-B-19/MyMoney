@@ -101,23 +101,47 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
     console.log("handleRemoveBudgetDropdown");
   };
 
+  const spent = 50; // Example spent amount
+  const limit = 100; // Example budget limit
+  const remaining = limit - spent;
+  const progress = (spent / limit) * 100;
+
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
         <Image source={imageSource} style={styles.image} />
       </View>
-      <View style={styles.textContainer}>
-        <View style={styles.categoryContainer}>
-          <Text style={styles.categoryText}>{category}</Text>
-        </View>
-        {!isBudgeted ? (
-          <View style={styles.buttonContainer}>
-            <Button title="SET BUDGET" onPress={handleSetBudget} />
+      <View style={styles.cardContainer}>
+        <View style={styles.textContainer}>
+          <View style={styles.categoryContainer}>
+            <Text style={styles.categoryText}>{category}</Text>
           </View>
-        ) : (
-          <TouchableOpacity onPress={handleOpenDropdown}>
-            <MaterialIcons name="more-horiz" size={24} color="black" />
-          </TouchableOpacity>
+          {!isBudgeted ? (
+            <View style={styles.buttonContainer}>
+              <Button title="SET BUDGET" onPress={handleSetBudget} />
+            </View>
+          ) : (
+            <TouchableOpacity onPress={handleOpenDropdown}>
+              <MaterialIcons name="more-horiz" size={24} color="black" />
+            </TouchableOpacity>
+          )}
+        </View>
+        {isBudgeted && (
+          <View style={styles.budgetDetailsContainer}>
+            <Text style={styles.amountText}>Limit: ${limit}</Text>
+            <Text style={styles.amountText}>Spent: ${spent}</Text>
+            <Text style={styles.amountText}>Remaining: ${remaining}</Text>
+            <View style={styles.progressMarkerContainer}>
+              <Text style={styles.monthText}>(Month)</Text>
+              <View style={styles.limitTextContainer}>
+                <Text style={styles.limitText}>{limit}</Text>
+              </View>
+              <View style={styles.progressMarker} />
+            </View>
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBar, { width: `${progress}%` }]} />
+            </View>
+          </View>
         )}
       </View>
       {/* Modal */}
@@ -214,7 +238,6 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
-    shadowColor: "gray",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     width: "100%",
@@ -234,6 +257,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
+  },
+  cardContainer: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    paddingLeft: 10,
   },
   textContainer: {
     flex: 1,
@@ -322,6 +351,57 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+  },
+  progressBarContainer: {
+    height: 10,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 5,
+    overflow: "hidden",
+    width: "100%",
+    marginTop: 5,
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: COLORS.ACCENT,
+  },
+  budgetDetailsContainer: {
+    flex: 1,
+    paddingTop: 10,
+    paddingLeft: 10,
+  },
+  progressMarkerContainer: {
+    position: "absolute",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    right: 0,
+    top: 5,
+    backgroundColor: "#fff",
+  },
+  progressMarker: {
+    backgroundColor: "transparent",
+    width: 0,
+    height: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 5,
+    borderBottomWidth: 10,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: COLORS.ACCENT,
+    transform: [{ rotate: "180deg" }], // Rotate to point upwards
+  },
+  limitTextContainer: {
+    backgroundColor: COLORS.ACCENT,
+    padding: 5,
+    // borderRadius: 5,
+    marginLeft: 5,
+  },
+  limitText: {
+    color: "#fff",
+  },
+  monthText: {
+    color: "#888", // Lighter font color
+    marginBottom: 10,
   },
 });
 
