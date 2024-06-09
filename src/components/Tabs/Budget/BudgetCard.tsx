@@ -25,6 +25,7 @@ import emptyIcon from "../../../../assets/Category/empty.png";
 import { calculateCategorySpending } from "@/utils/utilsFunctions";
 import { useAuth } from "@/context/AuthContext";
 import { useTransaction } from "@/context/TransactionContext";
+import updateTransactionData from "@/api/updateTransactionData";
 
 interface BudgetCardProps {
   category: string;
@@ -33,6 +34,7 @@ interface BudgetCardProps {
   selectedDate: Date;
   months: string[];
   selectedCategory: any;
+  onUpdate: () => void;
 }
 
 const BudgetCard: React.FC<BudgetCardProps> = ({
@@ -42,6 +44,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
   selectedDate,
   months,
   selectedCategory,
+  onUpdate,
 }) => {
   const categoryImages = {
     food: foodIcon,
@@ -66,6 +69,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
   const [limit, setLimit] = useState<number>(parseInt(budgetLimit) || 0);
   const [remaining, setRemaining] = useState<number>(0);
   const [progress, setProgress] = useState<number>(0);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [isDropdownVisible, setIsDropdownVisible] = React.useState(false);
@@ -109,16 +113,79 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
     setModalVisible(false);
   };
 
-  const handleConfirmBudget = () => {
-    const budgetData = {
-      month: selectedDate.getMonth() + 1,
-      year: selectedDate.getFullYear(),
-      limit: parseInt(budgetLimit),
-    };
-    setLimit(parseInt(budgetLimit));
-    setRemaining(parseInt(budgetLimit) - spent);
-    setProgress((spent / parseInt(budgetLimit)) * 100);
-    closeModal();
+  const handleConfirmBudget = async () => {
+    const selectedMonth = selectedDate.getMonth() + 1;
+    const selectedYear = selectedDate.getFullYear();
+
+    // Check if the selected category already has a budget limit for the current month and year
+    const existingBudgetIndex = selectedCategory.budgetLimits.findIndex(
+      (budget) => budget.month === selectedMonth && budget.year === selectedYear
+    );
+
+    // If a budget limit exists for the current month and year, update it
+    if (existingBudgetIndex !== -1) {
+      const updatedBudgetLimits = [...selectedCategory.budgetLimits];
+      updatedBudgetLimits[existingBudgetIndex].limit = parseInt(budgetLimit);
+
+      const updatedCategory = {
+        ...selectedCategory,
+        isBudgeted: true, // Set isBudgeted to true
+        budgetLimits: updatedBudgetLimits,
+      };
+
+      try {
+        const response = await updateTransactionData(
+          "categories",
+          selectedCategory.id,
+          updatedCategory
+        );
+
+        if (response.status === 200) {
+          setLimit(parseInt(budgetLimit));
+          setRemaining(parseInt(budgetLimit) - spent);
+          setProgress((spent / parseInt(budgetLimit)) * 100);
+          onUpdate();
+          closeModal();
+        } else {
+          console.error("Failed to update category budget:", response.error);
+        }
+      } catch (error) {
+        console.error("Error updating category budget:", error);
+      }
+    } else {
+      // If there's no existing budget limit for the current month and year, add a new entry
+      const budgetData = {
+        month: selectedMonth,
+        year: selectedYear,
+        limit: parseInt(budgetLimit),
+      };
+
+      const updatedCategory = {
+        ...selectedCategory,
+        isBudgeted: true, // Set isBudgeted to true
+        budgetLimits: [...selectedCategory.budgetLimits, budgetData],
+      };
+
+      try {
+        const response = await updateTransactionData(
+          "categories",
+          selectedCategory.id,
+          updatedCategory
+        );
+
+        if (response.status === 200) {
+          setLimit(parseInt(budgetLimit));
+          setRemaining(parseInt(budgetLimit) - spent);
+          setProgress((spent / parseInt(budgetLimit)) * 100);
+          onUpdate();
+          closeModal();
+        } else {
+          console.error("Failed to update category budget:", response.error);
+        }
+      } catch (error) {
+        console.error("Error updating category budget:", error);
+      }
+    }
   };
 
   const handleOpenDropdown = (event: any) => {
@@ -143,8 +210,52 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
   };
 
   const handleChangeLimitDropdown = () => {
-    handleSetBudget();
     handleCloseDropdown();
+    if (selectedCategory && selectedCategory.budgetLimits.length > 0) {
+      const selectedMonth = selectedDate.getMonth() + 1;
+      const selectedYear = selectedDate.getFullYear();
+      const selectedBudgetLimit = selectedCategory.budgetLimits.find(
+        (budget) =>
+          budget.month === selectedMonth && budget.year === selectedYear
+      );
+      if (selectedBudgetLimit) {
+        setBudgetLimit(selectedBudgetLimit.limit.toString());
+      }
+    }
+    setIsUpdateMode(true); // Set isUpdateMode to true when opening the modal
+    handleSetBudget();
+  };
+
+  const handleRemoveBudget = async () => {
+    const updatedCategory = {
+      ...selectedCategory,
+      isBudgeted: false,
+      budgetLimits: selectedCategory.budgetLimits.filter(
+        (budget) =>
+          budget.month !== selectedDate.getMonth() + 1 ||
+          budget.year !== selectedDate.getFullYear()
+      ),
+    };
+
+    try {
+      const response = await updateTransactionData(
+        "categories",
+        selectedCategory.id,
+        updatedCategory
+      );
+
+      if (response.status === 200) {
+        onUpdate();
+        setLimit(0);
+        setRemaining(spent);
+        setProgress(0);
+        console.log("Budget removed successfully");
+      } else {
+        console.error("Failed to remove category budget:", response.error);
+      }
+    } catch (error) {
+      console.error("Error removing category budget:", error);
+    }
   };
 
   const handleRemoveBudgetDropdown = () => {
@@ -160,9 +271,11 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
         {
           text: "Yes",
           onPress: () => {
-            setLimit(0);
-            setRemaining(spent);
-            setProgress(0);
+            // setLimit(0);
+            // setRemaining(spent);
+            // setProgress(0);
+            // onUpdate();
+            handleRemoveBudget();
             console.log("Budget removed");
           },
         },
@@ -244,7 +357,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({
             <View style={styles.buttonContainer}>
               <Button title="Cancel" onPress={closeModal} />
               <Button
-                title="Set"
+                title={isUpdateMode ? "Update" : "Set"} // Change button text to "Update" when isUpdateMode is true
                 onPress={() => {
                   handleConfirmBudget();
                   closeModal();

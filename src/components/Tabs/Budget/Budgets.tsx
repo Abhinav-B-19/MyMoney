@@ -6,22 +6,29 @@ import {
   ScrollView,
   Button,
   Modal,
-  TextInput,
 } from "react-native";
 import { useCategory } from "@/context/CategoryContext";
 import DateContext from "@/context/DateContext";
 import BudgetCard from "./BudgetCard"; // Import the BudgetCard component
+import SetFromPastMonthOverlay from "./SetFromPastMonthOverlay";
+import { handleDateChangeAndUpdate } from "@/utils/utilsFunctions";
+import fetchDataApi from "@/api/fetchDataApi";
+import { useTransaction } from "@/context/TransactionContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
   onScroll,
 }) => {
   const { selectedDate, handleDateChange } = useContext(DateContext);
-  const { contextCategories } = useCategory();
+  const { contextCategories, setContextCategories } = useCategory();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [budgetLimit, setBudgetLimit] = useState("");
   const [budgetedTransactions, setBudgetedTransactions] = useState([]);
   const [nonBudgetedTransactions, setNonBudgetedTransactions] = useState([]);
+  const [overlayVisible, setOverlayVisible] = useState(false);
+  const { transactionsContext, setTransactionsContext } = useTransaction();
+  const { authUser } = useAuth();
   const months = [
     "January",
     "February",
@@ -38,32 +45,33 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
   ];
 
   useEffect(() => {
-    console.log(selectedDate);
-    handleDateChangeAndUpdate(selectedDate);
-  }, [selectedDate]);
+    const { budgetedTransactionsFiltered, nonBudgetedTransactionsFiltered } =
+      handleDateChangeAndUpdate(selectedDate, contextCategories);
 
-  const handleDateChangeAndUpdate = (newDate: Date) => {
-    handleDateChange(newDate);
-    const budgetedTransactionsFiltered = contextCategories.filter(
-      (transaction) =>
-        transaction.isBudgeted &&
-        transaction.budgetLimits.some(
-          (limit) =>
-            limit.month === newDate.getMonth() + 1 &&
-            limit.year === newDate.getFullYear()
-        )
-    );
-    const nonBudgetedTransactionsFiltered = contextCategories.filter(
-      (transaction) =>
-        !transaction.isBudgeted ||
-        !transaction.budgetLimits.some(
-          (limit) =>
-            limit.month === newDate.getMonth() + 1 &&
-            limit.year === newDate.getFullYear()
-        )
-    );
     setBudgetedTransactions(budgetedTransactionsFiltered);
     setNonBudgetedTransactions(nonBudgetedTransactionsFiltered);
+  }, [selectedDate, contextCategories]);
+
+  const copyBudgetFromPastMonth = () => {
+    console.log("copyBudgetFromPastMonth");
+  };
+
+  const fetchingDataApi = async () => {
+    try {
+      const response = await fetchDataApi("categories", authUser);
+      if (response.status === 200 || response.status === 201) {
+        setContextCategories(response.data);
+      } else {
+        console.error("Failed to fetch categories:", response.error);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const handleUpdate = () => {
+    console.log("on handleUpdate fn in budget");
+    fetchingDataApi();
   };
 
   return (
@@ -77,10 +85,13 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Budgeted categories</Text>
           {budgetedTransactions.length === 0 ? (
-            <Text style={styles.noBudgetText}>
-              Currently, no budget is applied for this month. Set budget-limits
-              for this month, or copy your budget-limits from past months.
-            </Text>
+            <View>
+              <Text style={styles.noBudgetText}>
+                Currently, no budget is applied for this month. Set
+                budget-limits for this month, or copy your budget-limits from
+                past months.
+              </Text>
+            </View>
           ) : (
             budgetedTransactions.map((transaction, index) => (
               <BudgetCard
@@ -90,7 +101,8 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
                 isBudgeted={transaction.isBudgeted}
                 selectedDate={selectedDate}
                 months={months}
-                selectedCategory={transaction} // Pass selectedCategory to BudgetCard
+                selectedCategory={transaction}
+                onUpdate={handleUpdate}
               />
             ))
           )}
@@ -104,14 +116,40 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
               key={index}
               category={transaction.name}
               amount={transaction.amount}
-              isBudgeted={transaction.isBudgeted}
+              isBudgeted={
+                transaction.budgetLimits.some(
+                  (limit) =>
+                    limit.month === selectedDate.getMonth() + 1 &&
+                    limit.year === selectedDate.getFullYear()
+                )
+                  ? true
+                  : false
+              }
               selectedDate={selectedDate}
               months={months}
               selectedCategory={transaction}
+              onUpdate={handleUpdate}
             />
           ))}
         </View>
+        <Button
+          title="Set from past month"
+          onPress={() => setOverlayVisible(true)}
+        />
       </View>
+
+      {/* Overlay Screen */}
+      <Modal
+        visible={overlayVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setOverlayVisible(false)}
+      >
+        <SetFromPastMonthOverlay
+          onClose={() => setOverlayVisible(false)}
+          onCopy={copyBudgetFromPastMonth}
+        />
+      </Modal>
     </ScrollView>
   );
 };

@@ -105,3 +105,33 @@ export const calculateCategorySpending = (
 
   return totalSpent;
 };
+
+export const handleDateChangeAndUpdate = (
+  newDate: Date,
+  contextCategories: Transaction[]
+) => {
+  const budgetedTransactionsFiltered = contextCategories.filter(
+    (transaction) =>
+      transaction.isBudgeted &&
+      transaction.budgetLimits.some(
+        (limit) =>
+          limit.month === newDate.getMonth() + 1 &&
+          limit.year === newDate.getFullYear()
+      )
+  );
+  const nonBudgetedTransactionsFiltered = contextCategories.filter(
+    (transaction) =>
+      !transaction.isBudgeted ||
+      !transaction.budgetLimits.some(
+        (limit) =>
+          limit.month === newDate.getMonth() + 1 &&
+          limit.year === newDate.getFullYear()
+      )
+  );
+
+  // Return the filtered transactions
+  return {
+    budgetedTransactionsFiltered,
+    nonBudgetedTransactionsFiltered,
+  };
+};
