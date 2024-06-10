@@ -52,8 +52,8 @@ const Budgets: React.FC<{ onScroll: (event: any) => void }> = ({
     setNonBudgetedTransactions(nonBudgetedTransactionsFiltered);
   }, [selectedDate, contextCategories]);
 
-  const copyBudgetFromPastMonth = () => {
-    console.log("copyBudgetFromPastMonth");
+  const copyBudgetFromPastMonth = (item, currentBudgetLimit) => {
+    console.log("Copied budget from past month:", item, currentBudgetLimit);
   };
 
   const fetchingDataApi = async () => {

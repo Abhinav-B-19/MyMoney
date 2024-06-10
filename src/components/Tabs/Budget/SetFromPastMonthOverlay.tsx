@@ -14,7 +14,7 @@ import { useCategory } from "@/context/CategoryContext";
 
 interface SetFromPastMonthOverlayProps {
   onClose: () => void;
-  onCopy: () => void;
+  onCopy: (item: any, currentBudgetLimit: any) => void;
 }
 
 const SetFromPastMonthOverlay: React.FC<SetFromPastMonthOverlayProps> = ({
@@ -27,6 +27,8 @@ const SetFromPastMonthOverlay: React.FC<SetFromPastMonthOverlayProps> = ({
   const { contextCategories, setContextCategories } = useCategory();
   const [budgetedTransactionsFiltered, setBudgetedTransactionsFiltered] =
     useState([]);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [currentBudgetLimit, setCurrentBudgetLimit] = useState<any>(null);
 
   useEffect(() => {
     setDate(new Date());
@@ -38,14 +40,19 @@ const SetFromPastMonthOverlay: React.FC<SetFromPastMonthOverlayProps> = ({
       contextCategories
     );
     setBudgetedTransactionsFiltered(budgetedTransactionsFiltered);
-  }, [date]);
+  }, [date, contextCategories]); // Include contextCategories in the dependency array
 
   const handleDateChange = (newDate: Date) => {
     setDate(newDate);
   };
 
+  const handleItemPress = (item, currentBudgetLimit) => {
+    setSelectedItem(item);
+    setCurrentBudgetLimit(currentBudgetLimit);
+  };
+
   const renderBudgetLimit = ({ item }) => {
-    const currentMonth = date.getMonth() + 1; // Months are zero-based, so add 1
+    const currentMonth = date.getMonth() + 1;
     const currentYear = date.getFullYear();
 
     const currentBudgetLimit = item.budgetLimits.find(
@@ -56,13 +63,23 @@ const SetFromPastMonthOverlay: React.FC<SetFromPastMonthOverlayProps> = ({
 
     if (isCurrentMonth) {
       return (
-        <View style={styles.budgetItem}>
-          <Text style={styles.budgetText}>
-            {item.name}: ${currentBudgetLimit.limit}
-          </Text>
-          <Ionicons name={"checkmark-circle"} size={24} color={"green"} />
-        </View>
+        <TouchableOpacity
+          onPress={() => handleItemPress(item, currentBudgetLimit)}
+        >
+          <View style={styles.budgetItem}>
+            <Text style={styles.budgetText}>
+              {item.name}: ${currentBudgetLimit.limit}
+            </Text>
+            <Ionicons name={"checkmark-circle"} size={24} color={"green"} />
+          </View>
+        </TouchableOpacity>
       );
+    }
+  };
+
+  const handleCopyAll = () => {
+    if (selectedItem && currentBudgetLimit) {
+      onCopy(selectedItem, currentBudgetLimit);
     }
   };
 
@@ -110,7 +127,7 @@ const SetFromPastMonthOverlay: React.FC<SetFromPastMonthOverlayProps> = ({
           <TouchableOpacity style={styles.modalButton} onPress={onClose}>
             <Text style={styles.buttonText}>CLOSE</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.modalButton} onPress={onCopy}>
+          <TouchableOpacity style={styles.modalButton} onPress={handleCopyAll}>
             <Text style={styles.buttonText}>COPY ALL</Text>
           </TouchableOpacity>
         </View>
